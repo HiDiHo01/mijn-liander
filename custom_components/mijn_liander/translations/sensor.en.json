@@ -1,0 +1,42 @@
+{
+    "sensor.address": {
+        "name": "Adres",
+        "description": "Het adres van de aansluiting."
+    },
+    "sensor.electricity_ean": {
+        "name": "Elektriciteit EAN",
+        "description": "Het EAN-nummer van de elektriciteitsaansluiting."
+    },
+    "sensor.connection_capacity": {
+        "name": "Aansluitcapaciteit",
+        "description": "De capaciteit van de elektriciteitsaansluiting."
+    },
+    "sensor.status": {
+        "name": "Status",
+        "description": "De huidige status van de aansluiting."
+    },
+    "sensor.network_costs": {
+        "name": "Netwerkkosten",
+        "description": "De kosten voor het elektriciteitsnetwerk."
+    },
+    "sensor.maximum_power": {
+        "name": "Maximaal Vermogen",
+        "description": "Het maximale vermogen van de aansluiting in kilowatt."
+    },
+    "sensor.number_of_meters": {
+        "name": "Aantal Meters",
+        "description": "Het aantal meters dat aan deze aansluiting is gekoppeld."
+    },
+    "sensor.meter_number": {
+        "name": "Meternummer",
+        "description": "Het identificatienummer van de meter."
+    },
+    "sensor.number_of_registers": {
+        "name": "Aantal Telwerken",
+        "description": "Het aantal telwerken van de meter."
+    },
+    "sensor.number_of_phases": {
+        "name": "Aantal Fasen",
+        "description": "Het aantal fasen van de elektriciteitsaansluiting."
+    }
+}

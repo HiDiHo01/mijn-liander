@@ -1,0 +1,27 @@
+{
+    "entity": {
+        "sensor": {
+            "maximum_power": {
+                "name": "Maximum Power"
+            },
+            "electricity_ean": {
+                "name": "Electricity EAN"
+            },
+            "connection_capacity": {
+                "name": "Connection Capacity"
+            },
+            "network_costs": {
+                "name": "Network Costs"
+            },
+            "meter_number": {
+                "name": "Meter Number"
+            },
+            "number_of_registers": {
+                "name": "Number of Registers"
+            },
+            "number_of_phases": {
+                "name": "Number of Phases"
+            }
+        }
+    }
+}

@@ -1,0 +1,71 @@
+{
+    "component.mijn_liander.entity.sensor.maximum_power": "Maximaal Vermogen",
+    "mijn_liander.entity.sensor.maximum_power": "Maximaal Vermogen",
+    "entity.sensor.maximum_power": "Maximaal Vermogen",
+    "sensor.maximum_power": "Maximaal Vermogen",
+    "maximum_power": "Maximaal Vermogen",
+    "title": "Mijn Liander Nederland",
+    "config": {
+        "abort": {
+            "already_configured": "Account is al toegevoegd",
+            "reauth_successful": "Opnieuw inloggen gelukt"
+        },
+        "error": {
+            "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw."
+        },
+        "step": {
+            "user": {
+                "title": "Inloggen bij Mijn Liander",
+                "description": "Inloggen is nodig om deze integratie te kunnen gebruiken.",
+                "data": {
+                    "username": "Email",
+                    "password": "Wachtwoord",
+                    "timeout": "Timeout"
+                }
+            },
+            "reconfigure": {
+                "title": "Inloggen bij Mijn Liander",
+                "data": {
+                    "username": "Email",
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "Inloggen bij Mijn Liander",
+                "data": {
+                    "username": "Email",
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "maximum_power": {
+                "name": "Maximaal Vermogen"
+            },
+            "electricity_ean": {
+                "name": "Elektriciteit EAN"
+            },
+            "connection_capacity": {
+                "name": "Aansluitcapaciteit"
+            },
+            "network_costs": {
+                "name": "Netwerkkosten"
+            },
+            "meter_number": {
+                "name": "Meter Nummer"
+            },
+            "number_of_registers": {
+                "name": "Aantal Telwerken"
+            },
+            "number_of_phases": {
+                "name": "Aantal Fasen"
+            }
+        }
+    }
+}
