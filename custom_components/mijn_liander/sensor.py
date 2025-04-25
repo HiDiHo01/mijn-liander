@@ -94,7 +94,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         name="Maximum Power",
         translation_key="maximum_power",
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:flash-triangle-outline",
     ),
