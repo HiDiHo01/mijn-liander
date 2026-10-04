@@ -88,6 +88,7 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
+            config_entry=config_entry,
         )
 
     async def _async_renew_token(self) -> None:
