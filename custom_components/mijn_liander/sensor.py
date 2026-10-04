@@ -24,6 +24,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     SERVICE_NAME_ELEKTRA,
+    SERVICE_NAME_GAS,
     SERVICE_NAME_USER,
     VERSION,
 )
@@ -125,6 +126,75 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         name="Number of Phases",
         translation_key="number_of_phases",
         icon="mdi:trending-up",
+    ),
+    LianderSensorEntityDescription(
+        key="feed_in_start_date",
+        name="Feed-in Start Date",
+        translation_key="feed_in_start_date",
+        icon="mdi:calendar-arrow-right",
+    ),
+    LianderSensorEntityDescription(
+        key="generation_installations",
+        name="Generation Installations",
+        translation_key="generation_installations",
+        icon="mdi:solar-power",
+    ),
+    LianderSensorEntityDescription(
+        key="storage_installations",
+        name="Storage Installations",
+        translation_key="storage_installations",
+        icon="mdi:battery",
+    ),
+    LianderSensorEntityDescription(
+        key="gas_ean",
+        name="Gas EAN",
+        translation_key="gas_ean",
+        icon="mdi:meter-gas",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_connection_capacity",
+        name="Gas Connection Capacity",
+        translation_key="gas_connection_capacity",
+        icon="mdi:pipe",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_network_costs",
+        name="Gas Network Costs",
+        translation_key="gas_network_costs",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        icon="mdi:currency-eur",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_maximum_capacity",
+        name="Gas Maximum Capacity",
+        translation_key="gas_maximum_capacity",
+        icon="mdi:gauge",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_number_of_meters",
+        name="Number of Gas Meters",
+        translation_key="gas_number_of_meters",
+        icon="mdi:counter",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_meter_number",
+        name="Gas Meter Number",
+        translation_key="gas_meter_number",
+        icon="mdi:numeric",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_number_of_registers",
+        name="Number of Gas Registers",
+        translation_key="gas_number_of_registers",
+        icon="mdi:counter",
+        service_name=SERVICE_NAME_GAS,
     ),
 ]
 
@@ -249,64 +319,78 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
     @property
     def native_value(self) -> str | int | float | None:
         """Return the current state of the sensor based on coordinator data."""
-
         data = self.coordinator.data
-        value = None
 
         if not data:
             _LOGGER.debug("No coordinator data available for sensor %s", self._attr_unique_id)
             return None
 
-        for account in data:
-            if not isinstance(account, dict):
-                continue
-            address = account.get('adres', {})
-            if address and isinstance(address, dict):
-                if self.entity_description.key == "address":
-                    street = address.get('straat', '')
-                    house_number = address.get('huisnummer', '')
-                    addition = address.get('toevoeging', '')
-                    postal_code = address.get('postcode', '')
-                    city = address.get('plaats', '')
+        if self.entity_description.key == "address":
+            for account in data:
+                if not isinstance(account, dict):
+                    continue
+                address = account.get("adres")
+                if isinstance(address, dict):
+                    street = address.get("straat", "")
+                    house_number = address.get("huisnummer", "")
+                    addition = address.get("toevoeging", "")
+                    postal_code = address.get("postcode", "")
+                    city = address.get("plaats", "")
+                    return f"{street} {house_number}{addition} {postal_code} {city}".strip()
+            return None
 
-                    # Formatting the address
-                    value = (
-                        f"{street} {house_number}{addition} {postal_code} {city}"
-                    ).strip()
-                    return value
+        connection_type = (
+            "gas"
+            if self.entity_description.service_name == SERVICE_NAME_GAS
+            else "elektra"
+        )
+        connection = next(
+            (
+                item
+                for account in data
+                if isinstance(account, dict)
+                for item in (account.get("aansluitingen", {}).get(connection_type, []) or [])
+                if isinstance(item, dict)
+            ),
+            None,
+        )
+        if connection is None:
+            return None
 
-            elektra_connections = account.get(
-                'aansluitingen', {}).get('elektra', [])
-            if elektra_connections:
-                elektra = elektra_connections[0]
-                if self.entity_description.key == "electricity_ean":
-                    value = elektra.get("ean")
-                elif self.entity_description.key == "connection_capacity":
-                    value = elektra.get("aansluitwaarde")
-                elif self.entity_description.key == "status":
-                    value = elektra.get("status")
-                elif self.entity_description.key == "network_costs":
-                    value = elektra.get("netwerkkosten")
-                elif self.entity_description.key == "maximum_power":
-                    value = elektra.get("maximaalVermogen")
+        key = self.entity_description.key
+        connection_fields = {
+            "electricity_ean": "ean",
+            "connection_capacity": "aansluitwaarde",
+            "network_costs": "netwerkkosten",
+            "maximum_power": "maximaalVermogen",
+            "feed_in_start_date": "levertTerugVanaf",
+            "gas_ean": "ean",
+            "gas_connection_capacity": "aansluitwaarde",
+            "gas_network_costs": "netwerkkosten",
+            "gas_maximum_capacity": "maximaleCapaciteit",
+        }
+        if key in connection_fields:
+            return connection.get(connection_fields[key])
+        if key == "generation_installations":
+            return len(connection.get("opwekinstallaties", []) or [])
+        if key == "storage_installations":
+            return len(connection.get("opslaginstallaties", []) or [])
 
-                meters = elektra.get('meters', [])
-                if meters:
-                    if self.entity_description.key == "number_of_meters":
-                        value = len(meters)
-                    meter = meters[0]
-                    if self.entity_description.key == "meter_number":
-                        value = meter.get("meternummer")
-                    elif self.entity_description.key == "number_of_registers":
-                        value = meter.get("aantalTelwerken")
-                    elif self.entity_description.key == "number_of_phases":
-                        value = meter.get("aantalFasen")
+        meters = connection.get("meters", []) or []
+        meter_counts = {
+            "number_of_meters",
+            "gas_number_of_meters",
+        }
+        if key in meter_counts:
+            return len(meters)
+        if not meters or not isinstance(meters[0], dict):
+            return None
 
-                if value is not None:
-                    _LOGGER.debug("Sensor %s: %s",
-                                  self._attr_unique_id, value)
-                    return value
-                else:
-                    _LOGGER.debug("Sensor %s: No data found for key %s",
-                                  self._attr_unique_id, self.entity_description.key)
-        return None
+        meter_fields = {
+            "meter_number": "meternummer",
+            "number_of_registers": "aantalTelwerken",
+            "number_of_phases": "aantalFasen",
+            "gas_meter_number": "meternummer",
+            "gas_number_of_registers": "aantalTelwerken",
+        }
+        return meters[0].get(meter_fields[key]) if key in meter_fields else None

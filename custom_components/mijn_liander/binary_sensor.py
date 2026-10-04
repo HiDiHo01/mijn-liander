@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     SERVICE_NAME_ELEKTRA,
+    SERVICE_NAME_GAS,
     VERSION,
 )
 from .coordinator import LianderDataUpdateCoordinator
@@ -159,6 +160,62 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         icon="mdi:transmission-tower-import",
         service_name="Elektra"
     ),
+    LianderBinaryEntityDescription(
+        key="meter_fault_check_allowed",
+        name="Meter Fault Check Allowed",
+        translation_key="meter_fault_check_allowed",
+        icon="mdi:meter-electric-outline",
+        service_name=SERVICE_NAME_ELEKTRA,
+    ),
+    LianderBinaryEntityDescription(
+        key="smart_meter_request_allowed",
+        name="Smart Meter Request Allowed",
+        translation_key="smart_meter_request_allowed",
+        icon="mdi:meter-electric",
+        service_name=SERVICE_NAME_ELEKTRA,
+    ),
+    LianderBinaryEntityDescription(
+        key="net_metering",
+        name="Net Metering",
+        translation_key="net_metering",
+        icon="mdi:solar-power",
+        service_name=SERVICE_NAME_ELEKTRA,
+    ),
+    LianderBinaryEntityDescription(
+        key="gas_status",
+        name="Gas Status",
+        translation_key="gas_status",
+        icon="mdi:check-circle",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderBinaryEntityDescription(
+        key="gas_contract_active",
+        name="Gas Contract Active",
+        translation_key="gas_contract_active",
+        icon="mdi:check",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderBinaryEntityDescription(
+        key="gas_permission_to_read_data",
+        name="Gas Permission to Read Data",
+        translation_key="gas_permission_to_read_data",
+        icon="mdi:eye-check-outline",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderBinaryEntityDescription(
+        key="gas_meter_fault_check_allowed",
+        name="Gas Meter Fault Check Allowed",
+        translation_key="gas_meter_fault_check_allowed",
+        icon="mdi:meter-gas",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderBinaryEntityDescription(
+        key="gas_smart_meter",
+        name="Gas Smart Meter",
+        translation_key="gas_smart_meter",
+        icon="mdi:meter-gas",
+        service_name=SERVICE_NAME_GAS,
+    ),
 ]
 
 
@@ -229,40 +286,52 @@ class LianderBinarySensor(
         if not data:
             return False
 
-        for account in data:
-            if not isinstance(account, dict):
-                continue
-
-            elektra_connections = account.get(
-                'aansluitingen', {}).get('elektra', [])
-            if not elektra_connections:
-                continue
-
-            elektra = elektra_connections[0]
-            meters = elektra.get('meters', [])
-
-            key = self.entity_description.key
-            if key == "contract_active":
-                return elektra.get("contract", False)
-            elif key == "permission_to_read_data":
-                return elektra.get("toestemmingVoorUitlezen", False)
-            elif key == "smart_meter" and meters:
-                return meters[0].get("slimmeMeter", False)
-            elif key == "gprs" and meters:
-                return meters[0].get("gprs", False)
-            elif key == "analog" and meters:
-                return meters[0].get("analoog", False)
-            elif key == "suitable_for_backfeeding" and meters:
-                return meters[0].get("geschiktVoorTerugleveren", False)
-            elif key == "suitable_for_dual_tariff" and meters:
-                return meters[0].get("geschiktVoorDubbeltarief", False)
-            elif key == "backfeeding_energy":
-                return elektra.get("levertTerug", False)
-            elif key == "status":
-                return elektra.get("status", "") == "In bedrijf"
-            _LOGGER.warning(
-                "Unknown binary sensor key: %s", key)
+        connection_type = (
+            "gas"
+            if self.entity_description.service_name == SERVICE_NAME_GAS
+            else "elektra"
+        )
+        connection = next(
+            (
+                item
+                for account in data
+                if isinstance(account, dict)
+                for item in (account.get("aansluitingen", {}).get(connection_type, []) or [])
+                if isinstance(item, dict)
+            ),
+            None,
+        )
+        if connection is None:
             return False
+
+        key = self.entity_description.key.removeprefix("gas_")
+        connection_fields = {
+            "contract_active": "contract",
+            "permission_to_read_data": "toestemmingVoorUitlezen",
+            "meter_fault_check_allowed": "meterstoringscheckToegestaan",
+            "smart_meter_request_allowed": "nieuweSlimmeMeterAanvragenToegestaan",
+            "backfeeding_energy": "levertTerug",
+        }
+        if key == "status":
+            return connection.get("status") == "In bedrijf"
+        if key in connection_fields:
+            return bool(connection.get(connection_fields[key], False))
+        if key == "net_metering":
+            meters = connection.get("meters", []) or []
+            return bool(meters and meters[0].get("salderingsregeling", False))
+
+        meter_fields = {
+            "smart_meter": "slimmeMeter",
+            "gprs": "gprs",
+            "analog": "analoog",
+            "suitable_for_backfeeding": "geschiktVoorTerugleveren",
+            "suitable_for_dual_tariff": "geschiktVoorDubbeltarief",
+        }
+        if key in meter_fields:
+            meters = connection.get("meters", []) or []
+            return bool(meters and meters[0].get(meter_fields[key], False))
+
+        _LOGGER.warning("Unknown binary sensor key: %s", self.entity_description.key)
         return False
 
     @property

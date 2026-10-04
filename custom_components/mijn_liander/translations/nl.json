@@ -71,6 +71,89 @@
             },
             "number_of_phases": {
                 "name": "Aantal Fasen"
+            },
+            "feed_in_start_date": {
+                "name": "Startdatum teruglevering"
+            },
+            "generation_installations": {
+                "name": "Opwekinstallaties"
+            },
+            "storage_installations": {
+                "name": "Opslaginstallaties"
+            },
+            "gas_ean": {
+                "name": "Gas EAN"
+            },
+            "gas_connection_capacity": {
+                "name": "Gasaansluitcapaciteit"
+            },
+            "gas_network_costs": {
+                "name": "Gasnetwerkkosten"
+            },
+            "gas_maximum_capacity": {
+                "name": "Maximale gascapaciteit"
+            },
+            "gas_number_of_meters": {
+                "name": "Aantal gasmeters"
+            },
+            "gas_meter_number": {
+                "name": "Gasmeternummer"
+            },
+            "gas_number_of_registers": {
+                "name": "Aantal gastelwerken"
+            }
+        },
+        "binary_sensor": {
+            "status": {
+                "name": "Elektriciteitsstatus"
+            },
+            "contract_active": {
+                "name": "Elektriciteitscontract actief"
+            },
+            "permission_to_read_data": {
+                "name": "Toestemming elektriciteitsgegevens uit te lezen"
+            },
+            "smart_meter": {
+                "name": "Slimme elektriciteitsmeter"
+            },
+            "gprs": {
+                "name": "GPRS-verbinding"
+            },
+            "analog": {
+                "name": "Analoge meter"
+            },
+            "suitable_for_backfeeding": {
+                "name": "Teruglevering geschikt"
+            },
+            "suitable_for_dual_tariff": {
+                "name": "Dubbeltarief geschikt"
+            },
+            "backfeeding_energy": {
+                "name": "Teruglevering actief"
+            },
+            "meter_fault_check_allowed": {
+                "name": "Meterstoring controleren toegestaan"
+            },
+            "smart_meter_request_allowed": {
+                "name": "Slimme meter aanvragen toegestaan"
+            },
+            "net_metering": {
+                "name": "Salderingsregeling"
+            },
+            "gas_status": {
+                "name": "Gasstatus"
+            },
+            "gas_contract_active": {
+                "name": "Gascontract actief"
+            },
+            "gas_permission_to_read_data": {
+                "name": "Toestemming gasgegevens uit te lezen"
+            },
+            "gas_meter_fault_check_allowed": {
+                "name": "Gasmeterstoring controleren toegestaan"
+            },
+            "gas_smart_meter": {
+                "name": "Slimme gasmeter"
             }
         }
     }
