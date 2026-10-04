@@ -21,7 +21,6 @@ class LianderAPI:
     API_AANSLUITINGEN_URL = LIANDER_API_AANSLUITINGEN_URL
     API_ME_URL = LIANDER_API_ME_URL
     API_AANVRAAGGEGEVENS_URL = LIANDER_API_AANVRAAGGEGEVENS_URL
-    API_STORING_URL = "https://services1.arcgis.com/v6W5HAVrpgSg3vts/ArcGIS/rest/services/IStoringen_Productie_V7/FeatureServer/0/query?outFields=*&f=json&where=STORING_STATUS%20%3C%3E%20%27opgelost%27%20AND%20(STORING_GETROFFEN_POSTCODES%20LIKE%20%27%251741%20JB%25%27%20OR%20STORING_GETROFFEN_POSTCODES%20=%20%271741%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%271741;%25%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%27%25;1741%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%27%25;1741;%25%27)"
     def __init__(self, username: str, password: str, session: Optional[aiohttp.ClientSession] = None):
         """
         Initializes the Liander API object.
@@ -158,15 +157,6 @@ class LianderAPI:
         :raises Exception: If the request fails.
         """
         return await self._fetch_data(self.API_AANVRAAGGEGEVENS_URL)
-
-    async def fetch_storing(self) -> dict:
-        """
-        Fetches storing data from the external service.
-
-        :return: Parsed JSON response.
-        :raises Exception: If the request fails.
-        """
-        return await self._fetch_data(self.API_STORING_URL)
 
     async def fetch_aansluiting(self, ean: str) -> dict:
         """
