@@ -9,7 +9,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import API_LOGIN_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,14 +32,15 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
     Returns:
         dict: A dictionary with validation status and any errors.
     """
-    LOGIN_URL = "https://mijn-liander-gateway.web.liander.nl/api/v1/auth/login"
     login_data = {"username": username, "password": password}
 
     try:
         _LOGGER.debug("Sending login request to %s with data: %s",
-                      LOGIN_URL, login_data)
+                      API_LOGIN_URL, login_data)
         async with aiohttp.ClientSession() as session:
-            async with session.post(LOGIN_URL, json=login_data, timeout=timeout) as response:
+            async with session.post(
+                API_LOGIN_URL, json=login_data, timeout=timeout
+            ) as response:
                 response.raise_for_status()
                 login_response = await response.json()
                 jwt_token = login_response.get("jwt")

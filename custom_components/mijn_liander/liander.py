@@ -4,6 +4,7 @@ import logging
 import requests
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .const import API_LOGIN_URL
 from .coordinator import LianderDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 class MijnLiander:
     """Representation of the Mijn Liander component."""
 
-    LOGIN_URL = "https://mijn-liander-gateway.web.liander.nl/api/v1/auth/login"
+    LOGIN_URL = API_LOGIN_URL
 
     def __init__(self, hass, username: str, password: str, coordinator: LianderDataUpdateCoordinator):
         """Initialize the component."""

@@ -1,6 +1,9 @@
 {
     "entity": {
         "sensor": {
+            "address": {
+                "name": "Address"
+            },
             "maximum_power": {
                 "name": "Maximum Power"
             },
@@ -19,8 +22,94 @@
             "number_of_registers": {
                 "name": "Number of Registers"
             },
+            "number_of_meters": {
+                "name": "Number of Meters"
+            },
             "number_of_phases": {
                 "name": "Number of Phases"
+            },
+            "feed_in_start_date": {
+                "name": "Feed-in Start Date"
+            },
+            "generation_installations": {
+                "name": "Generation Installations"
+            },
+            "storage_installations": {
+                "name": "Storage Installations"
+            },
+            "gas_ean": {
+                "name": "Gas EAN"
+            },
+            "gas_connection_capacity": {
+                "name": "Gas Connection Capacity"
+            },
+            "gas_network_costs": {
+                "name": "Gas Network Costs"
+            },
+            "gas_maximum_capacity": {
+                "name": "Gas Maximum Capacity"
+            },
+            "gas_number_of_meters": {
+                "name": "Number of Gas Meters"
+            },
+            "gas_meter_number": {
+                "name": "Gas Meter Number"
+            },
+            "gas_number_of_registers": {
+                "name": "Number of Gas Registers"
+            }
+        },
+        "binary_sensor": {
+            "status": {
+                "name": "Electricity Status"
+            },
+            "contract_active": {
+                "name": "Electricity Contract Active"
+            },
+            "permission_to_read_data": {
+                "name": "Permission to Read Electricity Data"
+            },
+            "smart_meter": {
+                "name": "Electricity Smart Meter"
+            },
+            "gprs": {
+                "name": "GPRS Connection"
+            },
+            "analog": {
+                "name": "Analog Meter"
+            },
+            "suitable_for_backfeeding": {
+                "name": "Suitable for Feed-in"
+            },
+            "suitable_for_dual_tariff": {
+                "name": "Suitable for Dual Tariff"
+            },
+            "backfeeding_energy": {
+                "name": "Feed-in Active"
+            },
+            "meter_fault_check_allowed": {
+                "name": "Meter Fault Check Allowed"
+            },
+            "smart_meter_request_allowed": {
+                "name": "Smart Meter Request Allowed"
+            },
+            "net_metering": {
+                "name": "Net Metering"
+            },
+            "gas_status": {
+                "name": "Gas Status"
+            },
+            "gas_contract_active": {
+                "name": "Gas Contract Active"
+            },
+            "gas_permission_to_read_data": {
+                "name": "Gas Permission to Read Data"
+            },
+            "gas_meter_fault_check_allowed": {
+                "name": "Gas Meter Fault Check Allowed"
+            },
+            "gas_smart_meter": {
+                "name": "Gas Smart Meter"
             }
         }
     }
