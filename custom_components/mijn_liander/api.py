@@ -3,19 +3,28 @@ from typing import Optional
 
 import aiohttp
 
+from .const import (
+    API_AANSLUITINGEN_URL as LIANDER_API_AANSLUITINGEN_URL,
+    API_AANVRAAGGEGEVENS_URL as LIANDER_API_AANVRAAGGEGEVENS_URL,
+    API_BASE_URL as LIANDER_API_BASE_URL,
+    API_LOGIN_URL as LIANDER_API_LOGIN_URL,
+    API_ME_URL as LIANDER_API_ME_URL,
+    API_VERSION as LIANDER_API_VERSION,
+)
+
 
 class LianderAPI:
-    API_VERSION = "v1"
-    API_LOGIN_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-        API_VERSION}/auth/login"
-    API_AANSLUITINGEN_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-        API_VERSION}/aansluitingen"
-    API_ME_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-        API_VERSION}/profielen/me"
-    API_AANVRAAGGEGEVENS_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-        API_VERSION}/aanvraaggegevens"
+    API_VERSION = LIANDER_API_VERSION
+    API_BASE_URL = LIANDER_API_BASE_URL
+    API_LOGIN_URL = LIANDER_API_LOGIN_URL
+    API_AANSLUITINGEN_URL = LIANDER_API_AANSLUITINGEN_URL
+    API_ME_URL = LIANDER_API_ME_URL
+    API_AANVRAAGGEGEVENS_URL = LIANDER_API_AANVRAAGGEGEVENS_URL
     API_STORING_URL = "https://services1.arcgis.com/v6W5HAVrpgSg3vts/ArcGIS/rest/services/IStoringen_Productie_V7/FeatureServer/0/query?outFields=*&f=json&where=STORING_STATUS%20%3C%3E%20%27opgelost%27%20AND%20(STORING_GETROFFEN_POSTCODES%20LIKE%20%27%251741%20JB%25%27%20OR%20STORING_GETROFFEN_POSTCODES%20=%20%271741%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%271741;%25%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%27%25;1741%27%20OR%20STORING_GETROFFEN_POSTCODES%20LIKE%20%27%25;1741;%25%27)"
-    API_AANSLUITING_URL = "https://mijn-liander-gateway.web.liander.nl/aansluitingen/aansluiting/871685920003629897"
+    API_AANSLUITING_URL = (
+        f"{LIANDER_API_BASE_URL}/api/v2/private/aansluiting/ean/"
+        "871685920003629897"
+    )
 
     def __init__(self, username: str, password: str, session: Optional[aiohttp.ClientSession] = None):
         """
@@ -178,8 +187,9 @@ class LianderAPI:
         """
         try:
             self.logger.debug("Logging out from the Liander API.")
-            logout_url = f"https://mijn-liander-gateway.web.liander.nl/api/{
-                self.API_VERSION}/auth/logout"
+            logout_url = (
+                f"{self.API_BASE_URL}/api/{self.API_VERSION}/auth/logout"
+            )
             async with self.session.post(logout_url) as response:
                 self.logger.debug("Request: %s %s",
                                   response.method, response.url)

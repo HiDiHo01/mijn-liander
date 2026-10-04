@@ -9,7 +9,7 @@ DOMAIN = "mijn_liander"
 COMPONENT_TITLE = "Mijn Liander"
 
 UPDATE_INTERVAL = timedelta(minutes=360)
-VERSION = "2026.6.23"
+VERSION = "2026.10.4"
 ATTRIBUTION: Final[str] = "Data provided by Liander"
 MANUFACTURER: Final[str] = "Liander"
 
@@ -24,14 +24,13 @@ DEFAULT_PASSWORD = ""
 
 # API Endpoints
 API_VERSION = "v1"
-API_LOGIN_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-    API_VERSION}/auth/login"
-API_AANSLUITINGEN_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-    API_VERSION}/aansluitingen"
-API_ME_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-    API_VERSION}/profielen/me"
-API_AANVRAAGGEGEVENS_URL = f"https://mijn-liander-gateway.web.liander.nl/api/{
-    API_VERSION}/aanvraaggegevens"
+API_BASE_URL = "https://mijn-liander-ckz-service.web.liander.nl"
+API_LOGIN_URL = f"{API_BASE_URL}/api/{API_VERSION}/auth/login"
+API_AANSLUITINGEN_URL = f"{API_BASE_URL}/api/{API_VERSION}/aansluitingen"
+API_ME_URL = f"{API_BASE_URL}/api/{API_VERSION}/profielen/me"
+API_AANVRAAGGEGEVENS_URL = (
+    f"{API_BASE_URL}/api/{API_VERSION}/aanvraaggegevens"
+)
 
 # Service names
 SERVICE_NAME_ELEKTRA = "Elektra"
