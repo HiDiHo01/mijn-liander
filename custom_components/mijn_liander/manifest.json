@@ -2,8 +2,8 @@
     "domain": "mijn_liander",
     "name": "Mijn Liander",
     "version": "2024.9.16",
-    "documentation": "https://www.home-assistant.io/integrations/mijn_liander",
-    "issue_tracker": "https://github.com/HiDiHo01/home-assistant-mijn-liander/issues",
+    "documentation": "https://github.com/HiDiHo01/mijn-liander",
+    "issue_tracker": "https://github.com/HiDiHo01/mijn-liander/issues",
     "requirements": [
         "requests>=2.25.1",
         "pyjwt>=2.1.0",
