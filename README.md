@@ -1,19 +1,19 @@
-# mijn-liander
+# Mijn Liander
 
-Home Assistant-integratie voor Mijn Liander.
+Home Assistant integration for Mijn Liander.
 
-## Installeren via HACS
+## Install via HACS
 
-1. Open in Home Assistant **HACS > Integraties**.
-2. Open het menu rechtsboven en kies **Aangepaste repositories**.
-3. Voeg `https://github.com/HiDiHo01/mijn-liander` toe met categorie **Integratie**.
-4. Zoek in HACS naar **Mijn Liander** en kies **Downloaden**.
-5. Herstart Home Assistant.
-6. Ga naar **Instellingen > Apparaten en diensten > Integratie toevoegen**, zoek naar **Mijn Liander** en log in met je Mijn Liander-account.
+1. In Home Assistant, open **HACS > Integrations**.
+2. Open the menu in the upper-right corner and select **Custom repositories**.
+3. Add `https://github.com/HiDiHo01/mijn-liander` with the **Integration** category.
+4. Find **Mijn Liander** in HACS and select **Download**.
+5. Restart Home Assistant.
+6. Go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
 
-## Handmatige installatie
+## Manual installation
 
-1. Download de [laatste versie van deze repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
-2. Kopieer de map `custom_components/mijn_liander` naar `<config>/custom_components/mijn_liander` in Home Assistant.
-3. Herstart Home Assistant.
-4. Voeg **Mijn Liander** toe via **Instellingen > Apparaten en diensten > Integratie toevoegen** en log in met je Mijn Liander-account.
+1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
+2. Copy the `custom_components/mijn_liander` directory to `<config>/custom_components/mijn_liander` in Home Assistant.
+3. Restart Home Assistant.
+4. Add **Mijn Liander** through **Settings > Devices & services > Add integration** and sign in with your Mijn Liander account.
