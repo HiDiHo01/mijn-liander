@@ -198,7 +198,6 @@ class LianderBinarySensor(
             translation_key=f"{COMPONENT_TITLE} - {description.service_name}",
             manufacturer=MANUFACTURER,
             entry_type=DeviceEntryType.SERVICE,
-            via_device=(DOMAIN, "API"),
             configuration_url=CONFIG_URL,
             model=description.service_name,
             sw_version=VERSION,

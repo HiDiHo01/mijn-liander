@@ -45,6 +45,9 @@
     },
     "entity": {
         "sensor": {
+            "address": {
+                "name": "Adres"
+            },
             "maximum_power": {
                 "name": "Maximaal Vermogen"
             },
@@ -62,6 +65,9 @@
             },
             "number_of_registers": {
                 "name": "Aantal Telwerken"
+            },
+            "number_of_meters": {
+                "name": "Aantal Meters"
             },
             "number_of_phases": {
                 "name": "Aantal Fasen"

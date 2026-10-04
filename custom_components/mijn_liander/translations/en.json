@@ -1,6 +1,9 @@
 {
     "entity": {
         "sensor": {
+            "address": {
+                "name": "Address"
+            },
             "maximum_power": {
                 "name": "Maximum Power"
             },
@@ -18,6 +21,9 @@
             },
             "number_of_registers": {
                 "name": "Number of Registers"
+            },
+            "number_of_meters": {
+                "name": "Number of Meters"
             },
             "number_of_phases": {
                 "name": "Number of Phases"
