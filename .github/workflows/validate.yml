@@ -1,0 +1,52 @@
+name: validate
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 6"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    name: Validate
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # @v2.21.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            raw.githubusercontent.com:443
+            pkg-containers.githubusercontent.com:443
+            github.com:443
+            ghcr.io:443
+            pypi.org:443
+            files.pythonhosted.org:443
+            sonarcloud.io:443
+            objects.githubusercontent.com:443
+            uploads.github.com:443
+            upload.pypi.org:443
+            test.pypi.org:443
+            codecov.io:443
+            uploader.codecov.io:443
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 #v7.0.1
+
+        with:
+          persist-credentials: false
+      - name: HACS validation
+        uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # @1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
+        with:
+          category: integration
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@06749dd8c0b54f350bc69c8752456cee498808a3
