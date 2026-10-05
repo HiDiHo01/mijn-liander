@@ -15,10 +15,10 @@ class _ServiceEntityDescription(Protocol):
 _Description = TypeVar("_Description", bound=_ServiceEntityDescription)
 
 
-def has_active_gas_contract(data: Any) -> bool:
-    """Return whether any account has a gas connection with an active contract."""
+def get_active_gas_connection(data: Any) -> dict[str, Any] | None:
+    """Return the first gas connection with an active contract."""
     if not isinstance(data, list):
-        return False
+        return None
 
     for account in data:
         if not isinstance(account, dict):
@@ -29,13 +29,16 @@ def has_active_gas_contract(data: Any) -> bool:
         gas_connections = connections.get("gas")
         if not isinstance(gas_connections, list):
             continue
-        if any(
-            isinstance(connection, dict) and connection.get("contract") is True
-            for connection in gas_connections
-        ):
-            return True
+        for connection in gas_connections:
+            if isinstance(connection, dict) and connection.get("contract") is True:
+                return connection
 
-    return False
+    return None
+
+
+def has_active_gas_contract(data: Any) -> bool:
+    """Return whether any account has a gas connection with an active contract."""
+    return get_active_gas_connection(data) is not None
 
 
 def filter_entity_descriptions(

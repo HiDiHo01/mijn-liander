@@ -10,15 +10,18 @@ from unittest.mock import AsyncMock, patch
 
 from custom_components.mijn_liander import _async_monitor_gas_contract
 from custom_components.mijn_liander.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
+from custom_components.mijn_liander.binary_sensor import LianderBinarySensor
 from custom_components.mijn_liander.const import DOMAIN, SERVICE_NAME_GAS
 from custom_components.mijn_liander.gas import (
     filter_entity_descriptions,
+    get_active_gas_connection,
     has_active_gas_contract,
 )
 from custom_components.mijn_liander.migration import (
     remove_inactive_gas_registry_entries,
 )
 from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS
+from custom_components.mijn_liander.sensor import LianderSensor
 
 
 def gas_data(contract: object = True) -> list[dict[str, object]]:
@@ -98,6 +101,43 @@ class GasEntityTests(unittest.TestCase):
                 self.assertFalse(has_active_gas_contract(data))
 
         self.assertTrue(has_active_gas_contract(gas_data()))
+
+    def test_entities_use_the_first_active_gas_connection(self) -> None:
+        """Ignore earlier inactive connections consistently across gas entities."""
+        data = [
+            {
+                "aansluitingen": {
+                    "gas": [
+                        {"contract": False, "ean": "inactive-ean"},
+                        {
+                            "contract": True,
+                            "ean": "active-ean",
+                            "status": "In bedrijf",
+                        },
+                    ]
+                }
+            }
+        ]
+        active_connection = data[0]["aansluitingen"]["gas"][1]
+
+        self.assertIs(get_active_gas_connection(data), active_connection)
+        sensor = SimpleNamespace(
+            coordinator=SimpleNamespace(data=data),
+            entity_description=next(
+                item for item in SENSOR_DESCRIPTIONS if item.key == "gas_ean"
+            ),
+        )
+        binary_sensor = SimpleNamespace(
+            coordinator=SimpleNamespace(data=data),
+            entity_description=next(
+                item
+                for item in BINARY_SENSOR_DESCRIPTIONS
+                if item.key == "gas_contract_active"
+            ),
+        )
+
+        self.assertEqual(LianderSensor.native_value.fget(sensor), "active-ean")
+        self.assertTrue(LianderBinarySensor._get_is_on(binary_sensor))
 
     def test_gas_descriptions_are_filtered_for_electricity_only_accounts(
         self,
