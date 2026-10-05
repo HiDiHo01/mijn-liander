@@ -29,6 +29,7 @@ from .const import (
     VERSION,
 )
 from .coordinator import LianderDataUpdateCoordinator
+from .gas import filter_entity_descriptions, get_active_gas_connection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,8 +195,9 @@ async def async_setup_entry(
 
     sensors = [
         LianderSensor(coordinator, description, config_entry)
-        for description in SENSOR_DESCRIPTIONS
-        # if coordinator.api.auth.is_authenticated
+        for description in filter_entity_descriptions(
+            SENSOR_DESCRIPTIONS, coordinator.data
+        )
     ]
 
     # Add entities
@@ -326,15 +328,22 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             if self.entity_description.service_name == SERVICE_NAME_GAS
             else "elektra"
         )
-        connection = next(
-            (
-                item
-                for account in data
-                if isinstance(account, dict)
-                for item in (account.get("aansluitingen", {}).get(connection_type, []) or [])
-                if isinstance(item, dict)
-            ),
-            None,
+        connection = (
+            get_active_gas_connection(data)
+            if connection_type == "gas"
+            else next(
+                (
+                    item
+                    for account in data
+                    if isinstance(account, dict)
+                    for item in (
+                        account.get("aansluitingen", {}).get(connection_type, [])
+                        or []
+                    )
+                    if isinstance(item, dict)
+                ),
+                None,
+            )
         )
         if connection is None:
             return None

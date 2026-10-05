@@ -17,6 +17,8 @@ Then select **Download** in HACS and restart Home Assistant. If the button does 
 5. Restart Home Assistant.
 6. Go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
 
+Gas entities are created only while the account has an active gas contract. If the contract is added or removed later, the integration refreshes its entities when the account data next updates.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
