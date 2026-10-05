@@ -68,13 +68,21 @@ def _migrate_electricity_device(
     device_reg = device_registry.async_get(hass)
     entity_reg = entity_registry.async_get(hass)
     current_identifier = (DOMAIN, config_entry.entry_id)
-    current_device = device_reg.async_get_device(
-        identifiers={current_identifier}
+    entry_devices = device_registry.async_entries_for_config_entry(
+        device_reg, config_entry.entry_id
+    )
+    current_device = next(
+        (
+            device
+            for device in entry_devices
+            if current_identifier in device.identifiers
+        ),
+        None,
     )
     legacy_identifier_prefix = (DOMAIN, config_entry.entry_id)
     legacy_devices = [
         device
-        for device in device_reg.devices.values()
+        for device in entry_devices
         if device.model == SERVICE_NAME_ELEKTRA
         and current_identifier not in device.identifiers
         and any(
