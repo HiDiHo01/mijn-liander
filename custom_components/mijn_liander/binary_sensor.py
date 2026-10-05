@@ -31,6 +31,7 @@ from .const import (
     VERSION,
 )
 from .coordinator import LianderDataUpdateCoordinator
+from .gas import filter_entity_descriptions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +55,9 @@ async def async_setup_entry(
 
     binary_sensors = [
         LianderBinarySensor(coordinator, description, config_entry)
-        for description in BINARY_SENSOR_DESCRIPTIONS
-        # if coordinator.api.auth.is_authenticated
+        for description in filter_entity_descriptions(
+            BINARY_SENSOR_DESCRIPTIONS, coordinator.data
+        )
     ]
 
     async_add_entities(binary_sensors, True)

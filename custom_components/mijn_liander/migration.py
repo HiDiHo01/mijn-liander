@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import device_registry, entity_registry
 
-from .const import DOMAIN, SERVICE_NAME_ELEKTRA
+from .const import DOMAIN, SERVICE_NAME_ELEKTRA, SERVICE_NAME_GAS
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -190,6 +190,61 @@ def _migrate_electricity_device(
         legacy_device.id,
         new_identifiers={current_identifier},
     )
+
+
+def remove_inactive_gas_registry_entries(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
+    """Remove gas entity and device records when no gas contract is active."""
+    device_reg = device_registry.async_get(hass)
+    entity_reg = entity_registry.async_get(hass)
+    gas_identifier = (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_GAS}")
+    gas_devices = [
+        device
+        for device in device_registry.async_entries_for_config_entry(
+            device_reg, config_entry.entry_id
+        )
+        if gas_identifier in device.identifiers
+        and device.model == SERVICE_NAME_GAS
+    ]
+    if len(gas_devices) > 1:
+        _LOGGER.warning(
+            "Found multiple Mijn Liander gas devices for config entry %s; "
+            "leaving gas registry entries unchanged",
+            config_entry.entry_id,
+        )
+        return
+    if not gas_devices:
+        return
+
+    gas_device = gas_devices[0]
+    removed_entities = 0
+    for entry in list(entity_reg.entities.values()):
+        if (
+            entry.device_id == gas_device.id
+            and entry.platform == DOMAIN
+            and entry.config_entry_id == config_entry.entry_id
+        ):
+            entity_reg.async_remove(entry.entity_id)
+            removed_entities += 1
+
+    has_remaining_entities = any(
+        entry.device_id == gas_device.id
+        for entry in entity_reg.entities.values()
+    )
+    if (
+        not has_remaining_entities
+        and gas_device.config_entries.issubset({config_entry.entry_id})
+    ):
+        device_reg.async_remove_device(gas_device.id)
+
+    if removed_entities:
+        _LOGGER.info(
+            "Removed %s Mijn Liander gas entity registry entries because "
+            "no active gas contract is present",
+            removed_entities,
+        )
 
 
 async def async_migrate_registry(
