@@ -43,7 +43,6 @@ class LianderSensorEntityDescription(SensorEntityDescription):
     entity_registry_enabled_default: bool = True
     entity_registry_visible_default: bool = True
     force_update: bool = False
-    has_entity_name: bool = True
     icon: str | None = None
     icon_inactive: str | None = None
     name: str | UndefinedType | None = UNDEFINED
@@ -68,26 +67,22 @@ class LianderSensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="address",
-        name="Address",
         translation_key="address",
         icon="mdi:home",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
         key="electricity_ean",
-        name="Electricity EAN",
         translation_key="electricity_ean",
         icon="mdi:flash-outline",
     ),
     LianderSensorEntityDescription(
         key="connection_capacity",
-        name="Connection Capacity",
         translation_key="connection_capacity",
         icon="mdi:power-socket",
     ),
     LianderSensorEntityDescription(
         key="network_costs",
-        name="Network Costs",
         translation_key="network_costs",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -95,7 +90,6 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     ),
     LianderSensorEntityDescription(
         key="maximum_power",
-        name="Maximum Power",
         translation_key="maximum_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -105,63 +99,53 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     ),
     LianderSensorEntityDescription(
         key="number_of_meters",
-        name="Number of Meters",
         translation_key="number_of_meters",
         icon="mdi:counter",
     ),
     LianderSensorEntityDescription(
         key="meter_number",
-        name="Meter Number",
         translation_key="meter_number",
         icon="mdi:numeric",
     ),
     LianderSensorEntityDescription(
         key="number_of_registers",
-        name="Number of Registers",
         translation_key="number_of_registers",
         icon="mdi:counter",
     ),
     LianderSensorEntityDescription(
         key="number_of_phases",
-        name="Number of Phases",
         translation_key="number_of_phases",
         icon="mdi:trending-up",
     ),
     LianderSensorEntityDescription(
         key="feed_in_start_date",
-        name="Feed-in Start Date",
         translation_key="feed_in_start_date",
         icon="mdi:calendar-arrow-right",
     ),
     LianderSensorEntityDescription(
         key="generation_installations",
-        name="Generation Installations",
         translation_key="generation_installations",
         icon="mdi:solar-power",
     ),
     LianderSensorEntityDescription(
         key="storage_installations",
-        name="Storage Installations",
         translation_key="storage_installations",
         icon="mdi:battery",
     ),
     LianderSensorEntityDescription(
         key="gas_ean",
-        name="Gas EAN",
         translation_key="gas_ean",
         icon="mdi:meter-gas",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_connection_capacity",
-        name="Gas Connection Capacity",
         translation_key="gas_connection_capacity",
         icon="mdi:pipe",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_network_costs",
-        name="Gas Network Costs",
         translation_key="gas_network_costs",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -170,28 +154,24 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     ),
     LianderSensorEntityDescription(
         key="gas_maximum_capacity",
-        name="Gas Maximum Capacity",
         translation_key="gas_maximum_capacity",
         icon="mdi:gauge",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_number_of_meters",
-        name="Number of Gas Meters",
         translation_key="gas_number_of_meters",
         icon="mdi:counter",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_meter_number",
-        name="Gas Meter Number",
         translation_key="gas_meter_number",
         icon="mdi:numeric",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_number_of_registers",
-        name="Number of Gas Registers",
         translation_key="gas_number_of_registers",
         icon="mdi:counter",
         service_name=SERVICE_NAME_GAS,
@@ -237,6 +217,8 @@ class SensorAttributes:
 # class LianderSensor(CoordinatorEntity, SensorEntity):
 class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntity):
     """Representation of a Liander sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
