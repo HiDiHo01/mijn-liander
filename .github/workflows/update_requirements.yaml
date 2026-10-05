@@ -22,10 +22,10 @@ jobs:
           python-version: "3.14"
 
       - name: Install pip-tools
-        run: pip install pip-tools
+        run: pip install pip-tools==7.4.0
 
-      - name: Regenerate requirements files
-        run: pip-compile requirements_test.in --upgrade
+      - name: Regenerate requirements with hashes
+        run: pip-compile requirements_test.in --upgrade --generate-hashes
 
       - name: Commit and push changes
         run: |
