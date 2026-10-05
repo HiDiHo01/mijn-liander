@@ -36,7 +36,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Lint Python
-        uses: astral-sh/ruff-action@4919ec5cf1f49eff0871dbcea0da843445b837e6
+        uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89
         with:
           src: ./custom_components/mijn_liander ./tests
           args: check --config ruff.toml
