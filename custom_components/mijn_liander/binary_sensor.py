@@ -98,7 +98,6 @@ class LianderBinaryEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="status",
-        name="Status",
         translation_key="status",
         icon="mdi:check-circle",
         icon_inactive="mdi:cancel",
@@ -106,112 +105,96 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     ),
     LianderBinaryEntityDescription(
         key="contract_active",
-        name="Contract Active",
         translation_key="contract_active",
         icon="mdi:check",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="permission_to_read_data",
-        name="Permission to Read Data",
         translation_key="permission_to_read_data",
         icon="mdi:eye-check-outline",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="smart_meter",
-        name="Smart Meter",
         translation_key="smart_meter",
         icon="mdi:meter-electric",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="gprs",
-        name="GPRS Connection",
         translation_key="gprs",
         icon="mdi:signal",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="analog",
-        name="Analog",
         translation_key="analog",
         icon="mdi:waveform",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="suitable_for_backfeeding",
-        name="Suitable for Backfeed",
         translation_key="suitable_for_backfeeding",
         icon="mdi:transmission-tower",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="suitable_for_dual_tariff",
-        name="Suitable for Dual Tariff",
         translation_key="suitable_for_dual_tariff",
         icon="mdi:cash-multiple",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="backfeeding_energy",
-        name="Backfeeding Energy",
         translation_key="backfeeding_energy",
         icon="mdi:transmission-tower-import",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="meter_fault_check_allowed",
-        name="Meter Fault Check Allowed",
         translation_key="meter_fault_check_allowed",
         icon="mdi:meter-electric-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
         key="smart_meter_request_allowed",
-        name="Smart Meter Request Allowed",
         translation_key="smart_meter_request_allowed",
         icon="mdi:meter-electric",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
         key="net_metering",
-        name="Net Metering",
         translation_key="net_metering",
         icon="mdi:solar-power",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
         key="gas_status",
-        name="Gas Status",
         translation_key="gas_status",
         icon="mdi:check-circle",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
         key="gas_contract_active",
-        name="Gas Contract Active",
         translation_key="gas_contract_active",
         icon="mdi:check",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
         key="gas_permission_to_read_data",
-        name="Gas Permission to Read Data",
         translation_key="gas_permission_to_read_data",
         icon="mdi:eye-check-outline",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
         key="gas_meter_fault_check_allowed",
-        name="Gas Meter Fault Check Allowed",
         translation_key="gas_meter_fault_check_allowed",
         icon="mdi:meter-gas",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
         key="gas_smart_meter",
-        name="Gas Smart Meter",
         translation_key="gas_smart_meter",
         icon="mdi:meter-gas",
         service_name=SERVICE_NAME_GAS,

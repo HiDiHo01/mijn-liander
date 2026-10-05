@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import LianderDataUpdateCoordinator
+from .migration import async_migrate_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Avoid overwriting hass.data[DOMAIN] entirely
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    await async_migrate_registry(hass, entry)
     # hass.data[DOMAIN]["credentials"] = {
     #     "username": username,
     #     "password": password
