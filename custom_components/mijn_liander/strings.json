@@ -31,150 +31,114 @@
   "entity": {
     "sensor": {
       "address": {
-        "name": "Address",
-        "description": "The address of the connection."
+        "name": "Address"
       },
       "electricity_ean": {
-        "name": "Electricity EAN",
-        "description": "The EAN identifier of the electricity connection."
+        "name": "Electricity EAN"
       },
       "connection_capacity": {
-        "name": "Connection Capacity",
-        "description": "The capacity of the electricity connection."
+        "name": "Connection Capacity"
       },
       "network_costs": {
-        "name": "Network Costs",
-        "description": "The network costs for this connection."
+        "name": "Network Costs"
       },
       "maximum_power": {
-        "name": "Maximum Power",
-        "description": "The maximum power capacity of the connection."
+        "name": "Maximum Power"
       },
       "number_of_meters": {
-        "name": "Number of Meters",
-        "description": "The number of meters connected to this connection."
+        "name": "Number of Meters"
       },
       "meter_number": {
-        "name": "Meter Number",
-        "description": "The identification number of the meter."
+        "name": "Meter Number"
       },
       "number_of_registers": {
-        "name": "Number of Registers",
-        "description": "The number of registers on the meter."
+        "name": "Number of Registers"
       },
       "number_of_phases": {
-        "name": "Number of Phases",
-        "description": "The number of phases of the electricity connection."
+        "name": "Number of Phases"
       },
       "feed_in_start_date": {
-        "name": "Feed-in Start Date",
-        "description": "The date from which electricity is fed back."
+        "name": "Feed-in Start Date"
       },
       "generation_installations": {
-        "name": "Generation Installations",
-        "description": "The number of electricity generation installations."
+        "name": "Generation Installations"
       },
       "storage_installations": {
-        "name": "Storage Installations",
-        "description": "The number of electricity storage installations."
+        "name": "Storage Installations"
       },
       "gas_ean": {
-        "name": "Gas EAN",
-        "description": "The EAN identifier of the gas connection."
+        "name": "Gas EAN"
       },
       "gas_connection_capacity": {
-        "name": "Gas Connection Capacity",
-        "description": "The capacity of the gas connection."
+        "name": "Gas Connection Capacity"
       },
       "gas_network_costs": {
-        "name": "Gas Network Costs",
-        "description": "The network costs for the gas connection."
+        "name": "Gas Network Costs"
       },
       "gas_maximum_capacity": {
-        "name": "Gas Maximum Capacity",
-        "description": "The maximum capacity of the gas connection."
+        "name": "Gas Maximum Capacity"
       },
       "gas_number_of_meters": {
-        "name": "Number of Gas Meters",
-        "description": "The number of meters connected to the gas connection."
+        "name": "Number of Gas Meters"
       },
       "gas_meter_number": {
-        "name": "Gas Meter Number",
-        "description": "The identification number of the gas meter."
+        "name": "Gas Meter Number"
       },
       "gas_number_of_registers": {
-        "name": "Number of Gas Registers",
-        "description": "The number of registers on the gas meter."
+        "name": "Number of Gas Registers"
       }
     },
     "binary_sensor": {
       "status": {
-        "name": "Electricity Status",
-        "description": "The status of the electricity connection."
+        "name": "Electricity Status"
       },
       "contract_active": {
-        "name": "Electricity Contract Active",
-        "description": "Whether the electricity contract is active."
+        "name": "Electricity Contract Active"
       },
       "permission_to_read_data": {
-        "name": "Permission to Read Electricity Data",
-        "description": "Whether permission to read electricity data is granted."
+        "name": "Permission to Read Electricity Data"
       },
       "smart_meter": {
-        "name": "Electricity Smart Meter",
-        "description": "Whether the electricity meter is a smart meter."
+        "name": "Electricity Smart Meter"
       },
       "gprs": {
-        "name": "GPRS Connection",
-        "description": "Whether the meter has a GPRS connection."
+        "name": "GPRS Connection"
       },
       "analog": {
-        "name": "Analog Meter",
-        "description": "Whether the connection uses an analog meter."
+        "name": "Analog Meter"
       },
       "suitable_for_backfeeding": {
-        "name": "Suitable for Feed-in",
-        "description": "Whether the connection is suitable for feeding electricity back."
+        "name": "Suitable for Feed-in"
       },
       "suitable_for_dual_tariff": {
-        "name": "Suitable for Dual Tariff",
-        "description": "Whether the meter supports a dual tariff."
+        "name": "Suitable for Dual Tariff"
       },
       "backfeeding_energy": {
-        "name": "Feed-in Active",
-        "description": "Whether electricity is currently being fed back."
+        "name": "Feed-in Active"
       },
       "meter_fault_check_allowed": {
-        "name": "Meter Fault Check Allowed",
-        "description": "Whether a meter fault check is allowed."
+        "name": "Meter Fault Check Allowed"
       },
       "smart_meter_request_allowed": {
-        "name": "Smart Meter Request Allowed",
-        "description": "Whether a smart meter can be requested."
+        "name": "Smart Meter Request Allowed"
       },
       "net_metering": {
-        "name": "Net Metering",
-        "description": "Whether net metering is applicable."
+        "name": "Net Metering"
       },
       "gas_status": {
-        "name": "Gas Status",
-        "description": "The status of the gas connection."
+        "name": "Gas Status"
       },
       "gas_contract_active": {
-        "name": "Gas Contract Active",
-        "description": "Whether the gas contract is active."
+        "name": "Gas Contract Active"
       },
       "gas_permission_to_read_data": {
-        "name": "Gas Permission to Read Data",
-        "description": "Whether permission to read gas data is granted."
+        "name": "Gas Permission to Read Data"
       },
       "gas_meter_fault_check_allowed": {
-        "name": "Gas Meter Fault Check Allowed",
-        "description": "Whether a gas meter fault check is allowed."
+        "name": "Gas Meter Fault Check Allowed"
       },
       "gas_smart_meter": {
-        "name": "Gas Smart Meter",
-        "description": "Whether the gas meter is a smart meter."
+        "name": "Gas Smart Meter"
       }
     }
   }

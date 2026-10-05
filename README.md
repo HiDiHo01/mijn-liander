@@ -25,3 +25,21 @@ Gas entities are created only while the account has an active gas contract. If t
 2. Copy the `custom_components/mijn_liander` directory to `<config>/custom_components/mijn_liander` in Home Assistant.
 3. Restart Home Assistant.
 4. Add **Mijn Liander** through **Settings > Devices & services > Add integration** and sign in with your Mijn Liander account.
+
+## Development checks
+
+CI validates HACS metadata, Home Assistant integration metadata and translations
+(hassfest), Python lint, and the regression tests. HACS requires the repository
+to have the `home-assistant` topic.
+
+With Python 3.14.2 or newer, install the locked test dependencies and run the tests:
+
+```shell
+python -m pip install --require-hashes --only-binary=:all: --no-binary=pyric -r requirements_test.txt
+python -m pytest -q
+```
+
+PyRIC has no published wheel, so only its hash-verified source archive is allowed.
+Run Ruff 0.16.10 with `ruff check --config ruff.toml custom_components/mijn_liander tests`.
+To update the dependency lock, edit `requirements_test.in` and run the `uv pip compile`
+command recorded at the top of `requirements_test.txt`.

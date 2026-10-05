@@ -36,21 +36,25 @@ Methods:
 import asyncio
 import logging
 import platform
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import aiohttp
-import async_timeout
 import jwt
 from aiohttp.client_exceptions import ContentTypeError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                      UpdateFailed)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (API_AANSLUITINGEN_URL, API_LOGIN_URL, CONF_PASSWORD,
-                    CONF_USERNAME, DOMAIN, UPDATE_INTERVAL)
+from .const import (
+    API_AANSLUITINGEN_URL,
+    API_LOGIN_URL,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,8 +84,8 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
         self._session = async_get_clientsession(hass)  # Gebruik HA's session
-        self._token: Optional[str] = None
-        self._token_expiry: Optional[datetime] = None
+        self._token: str | None = None
+        self._token_expiry: datetime | None = None
 
         super().__init__(
             hass,
@@ -108,7 +112,7 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Request data: %s", login_data)
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with self._session.post(API_LOGIN_URL, json=login_data, timeout=timeout) as response:
                     response.raise_for_status()
                     if response.status == 401:
@@ -124,9 +128,9 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
                 decoded_token = jwt.decode(self._token, options={"verify_signature": False})
                 exp_timestamp = decoded_token.get("exp")
                 self._token_expiry = (
-                    datetime.fromtimestamp(exp_timestamp, timezone.utc)
+                    datetime.fromtimestamp(exp_timestamp, UTC)
                     if exp_timestamp
-                    else datetime.now(timezone.utc) + timedelta(hours=1)
+                    else datetime.now(UTC) + timedelta(hours=1)
                 )
             except jwt.DecodeError as e:
                 _LOGGER.error("Failed to decode JWT token: %s", e)
@@ -186,7 +190,7 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
             # Default to expired if no expiry time is set
             return True
 
-        now = datetime.now(timezone.utc)  # Get the current time once for consistency
+        now = datetime.now(UTC)  # Get the current time once for consistency
 
         # Warn if the token is about to expire in less than 30 minutes
         if self._token_expiry - timedelta(minutes=30) <= now:

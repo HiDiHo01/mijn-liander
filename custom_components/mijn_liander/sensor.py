@@ -2,7 +2,6 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Union
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class LianderSensorEntityDescription(SensorEntityDescription):
     """Class to describe a sensor entity with inactive icon support."""
     key: str
-    service_name: Union[str, None] = SERVICE_NAME_ELEKTRA
+    service_name: str | None = SERVICE_NAME_ELEKTRA
     device_class: SensorDeviceClass | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True

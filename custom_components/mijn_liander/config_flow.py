@@ -1,6 +1,6 @@
 # config_flow.py
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 import voluptuous as vol
@@ -37,20 +37,19 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
     try:
         _LOGGER.debug("Sending login request to %s with data: %s",
                       API_LOGIN_URL, login_data)
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                API_LOGIN_URL, json=login_data, timeout=timeout
-            ) as response:
-                response.raise_for_status()
-                login_response = await response.json()
-                jwt_token = login_response.get("jwt")
+        async with aiohttp.ClientSession() as session, session.post(
+            API_LOGIN_URL, json=login_data, timeout=timeout
+        ) as response:
+            response.raise_for_status()
+            login_response = await response.json()
+            jwt_token = login_response.get("jwt")
 
-                if jwt_token:
-                    _LOGGER.debug("Received JWT token: %s", jwt_token)
-                    return {"status": "success", "jwt_token": jwt_token}
+            if jwt_token:
+                _LOGGER.debug("Received JWT token: %s", jwt_token)
+                return {"status": "success", "jwt_token": jwt_token}
 
-                _LOGGER.warning("JWT token not found in response.")
-                return {"status": "error", "error": "invalid_auth"}
+            _LOGGER.warning("JWT token not found in response.")
+            return {"status": "error", "error": "invalid_auth"}
     except aiohttp.ClientResponseError as e:
         return {"status": "error", "error": _map_http_error(e)}
     except aiohttp.ClientError as e:
@@ -93,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the initial step of user input."""
         errors: dict[str, str] = {}
 
@@ -166,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow):
         }
         return error_mapping.get(error_code, "unknown_error")
 
-    async def async_step_reauth(self, user_input: Optional[dict[str, Any]] = None) -> FlowResult:
+    async def async_step_reauth(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle re-authentication if the credentials become invalid."""
         errors = {}
 

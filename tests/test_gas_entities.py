@@ -9,8 +9,10 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from custom_components.mijn_liander import _async_monitor_gas_contract
-from custom_components.mijn_liander.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
-from custom_components.mijn_liander.binary_sensor import LianderBinarySensor
+from custom_components.mijn_liander.binary_sensor import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    LianderBinarySensor,
+)
 from custom_components.mijn_liander.const import DOMAIN, SERVICE_NAME_GAS
 from custom_components.mijn_liander.gas import (
     filter_entity_descriptions,
@@ -20,8 +22,7 @@ from custom_components.mijn_liander.gas import (
 from custom_components.mijn_liander.migration import (
     remove_inactive_gas_registry_entries,
 )
-from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS
-from custom_components.mijn_liander.sensor import LianderSensor
+from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS, LianderSensor
 
 
 def gas_data(contract: object = True) -> list[dict[str, object]]:
