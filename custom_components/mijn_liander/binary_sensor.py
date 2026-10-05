@@ -4,8 +4,8 @@ Binary Sensor platform for Mijn Liander.
 # binary_sensor.py
 import logging
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Union
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -67,23 +67,23 @@ async def async_setup_entry(
 class LianderBinaryEntityDescription(BinarySensorEntityDescription):
     """Representation of a Sensor."""
     key: str
-    name: Optional[str] = None
-    device_class: Optional[BinarySensorDeviceClass] = None
-    state_class: Optional[str] = None
-    native_unit_of_measurement: Optional[str] = None
-    suggested_display_precision: Optional[int] = None
+    name: str | None = None
+    device_class: BinarySensorDeviceClass | None = None
+    state_class: str | None = None
+    native_unit_of_measurement: str | None = None
+    suggested_display_precision: int | None = None
     # authenticated: bool = False
-    service_name: Union[str, None] = SERVICE_NAME_ELEKTRA
-    value_fn: Optional[Callable[[dict], StateType]] = None
-    attr_fn: Callable[[dict], dict[str, Union[StateType, list[object]]]] = field(
-        default_factory=lambda: {}  # type: ignore
+    service_name: str | None = SERVICE_NAME_ELEKTRA
+    value_fn: Callable[[dict], StateType] | None = None
+    attr_fn: Callable[[dict], dict[str, StateType | list[object]]] = field(
+        default_factory=dict  # type: ignore
     )
     entity_registry_enabled_default: bool = True
     entity_registry_visible_default: bool = True
-    translation_key: Optional[str] = None
-    icon: Optional[str] = None
-    icon_inactive: Optional[str] = None
-    entity_category: Optional[EntityCategory] = None
+    translation_key: str | None = None
+    icon: str | None = None
+    icon_inactive: str | None = None
+    entity_category: EntityCategory | None = None
     force_update: bool = False
     is_on_fn: Callable[[dict], bool] | None = None
     translation_placeholders: dict[str, str] | None = None
@@ -327,10 +327,10 @@ class LianderBinarySensor(
         return False
 
     @property
-    def extra_state_attributes(self) -> dict[str, Union[str, list[object], bool, None]]:  # type: ignore[override]
+    def extra_state_attributes(self) -> dict[str, str | list[object] | bool | None]:  # type: ignore[override]
         """Return the state attributes."""
         data = self.coordinator.data
-        attributes: dict[str, Union[str, list[object], bool, None]] = {
+        attributes: dict[str, str | list[object] | bool | None] = {
             "attribution": ATTRIBUTION,
             "state": self.state,
             "assumed_state": (self.assumed_state() if callable(self.assumed_state) else self.assumed_state),

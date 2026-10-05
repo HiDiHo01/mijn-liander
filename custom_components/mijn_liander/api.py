@@ -1,15 +1,24 @@
 import logging
-from typing import Optional
 from urllib.parse import quote
 
 import aiohttp
 
 from .const import (
     API_AANSLUITINGEN_URL as LIANDER_API_AANSLUITINGEN_URL,
+)
+from .const import (
     API_AANVRAAGGEGEVENS_URL as LIANDER_API_AANVRAAGGEGEVENS_URL,
+)
+from .const import (
     API_BASE_URL as LIANDER_API_BASE_URL,
+)
+from .const import (
     API_LOGIN_URL as LIANDER_API_LOGIN_URL,
+)
+from .const import (
     API_ME_URL as LIANDER_API_ME_URL,
+)
+from .const import (
     API_VERSION as LIANDER_API_VERSION,
 )
 
@@ -21,7 +30,7 @@ class LianderAPI:
     API_AANSLUITINGEN_URL = LIANDER_API_AANSLUITINGEN_URL
     API_ME_URL = LIANDER_API_ME_URL
     API_AANVRAAGGEGEVENS_URL = LIANDER_API_AANVRAAGGEGEVENS_URL
-    def __init__(self, username: str, password: str, session: Optional[aiohttp.ClientSession] = None):
+    def __init__(self, username: str, password: str, session: aiohttp.ClientSession | None = None):
         """
         Initializes the Liander API object.
 

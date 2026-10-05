@@ -1,181 +1,145 @@
 {
-    "title": "Mijn Liander Nederland",
-    "config": {
-        "abort": {
-            "already_configured": "Account is al toegevoegd",
-            "reauth_successful": "Opnieuw inloggen gelukt"
-        },
-        "error": {
-            "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw."
-        },
-        "step": {
-            "user": {
-                "title": "Inloggen bij Mijn Liander",
-                "description": "Inloggen is nodig om deze integratie te kunnen gebruiken.",
-                "data": {
-                    "username": "Email",
-                    "password": "Wachtwoord",
-                    "timeout": "Timeout"
-                }
-            },
-            "reauth": {
-                "title": "Opnieuw inloggen bij Mijn Liander",
-                "data": {
-                    "username": "Email",
-                    "password": "Wachtwoord",
-                    "timeout": "Timeout"
-                }
-            }
-        }
+  "title": "Mijn Liander Nederland",
+  "config": {
+    "abort": {
+      "already_configured": "Account is al toegevoegd",
+      "reauth_successful": "Opnieuw inloggen gelukt"
     },
-    "entity": {
-        "sensor": {
-            "address": {
-                "name": "Adres",
-                "description": "Het adres van de aansluiting."
-            },
-            "maximum_power": {
-                "name": "Maximaal Vermogen",
-                "description": "Het maximale vermogen van de aansluiting."
-            },
-            "electricity_ean": {
-                "name": "Elektriciteit EAN",
-                "description": "Het EAN-nummer van de elektriciteitsaansluiting."
-            },
-            "connection_capacity": {
-                "name": "Aansluitcapaciteit",
-                "description": "De capaciteit van de elektriciteitsaansluiting."
-            },
-            "network_costs": {
-                "name": "Netwerkkosten",
-                "description": "De netwerkkosten voor deze aansluiting."
-            },
-            "meter_number": {
-                "name": "Meter Nummer",
-                "description": "Het identificatienummer van de meter."
-            },
-            "number_of_registers": {
-                "name": "Aantal Telwerken",
-                "description": "Het aantal telwerken op de meter."
-            },
-            "number_of_meters": {
-                "name": "Aantal Meters",
-                "description": "Het aantal meters dat aan deze aansluiting is gekoppeld."
-            },
-            "number_of_phases": {
-                "name": "Aantal Fasen",
-                "description": "Het aantal fasen van de elektriciteitsaansluiting."
-            },
-            "feed_in_start_date": {
-                "name": "Startdatum teruglevering",
-                "description": "De datum vanaf wanneer elektriciteit wordt teruggeleverd."
-            },
-            "generation_installations": {
-                "name": "Opwekinstallaties",
-                "description": "Het aantal elektriciteitsopwekinstallaties."
-            },
-            "storage_installations": {
-                "name": "Opslaginstallaties",
-                "description": "Het aantal elektriciteitsopslaginstallaties."
-            },
-            "gas_ean": {
-                "name": "Gas EAN",
-                "description": "Het EAN-nummer van de gasaansluiting."
-            },
-            "gas_connection_capacity": {
-                "name": "Gasaansluitcapaciteit",
-                "description": "De capaciteit van de gasaansluiting."
-            },
-            "gas_network_costs": {
-                "name": "Gasnetwerkkosten",
-                "description": "De netwerkkosten voor de gasaansluiting."
-            },
-            "gas_maximum_capacity": {
-                "name": "Maximale gascapaciteit",
-                "description": "De maximale capaciteit van de gasaansluiting."
-            },
-            "gas_number_of_meters": {
-                "name": "Aantal gasmeters",
-                "description": "Het aantal meters op de gasaansluiting."
-            },
-            "gas_meter_number": {
-                "name": "Gasmeternummer",
-                "description": "Het identificatienummer van de gasmeter."
-            },
-            "gas_number_of_registers": {
-                "name": "Aantal gastelwerken",
-                "description": "Het aantal telwerken op de gasmeter."
-            }
-        },
-        "binary_sensor": {
-            "status": {
-                "name": "Elektriciteitsstatus",
-                "description": "De status van de elektriciteitsaansluiting."
-            },
-            "contract_active": {
-                "name": "Elektriciteitscontract actief",
-                "description": "Of het elektriciteitscontract actief is."
-            },
-            "permission_to_read_data": {
-                "name": "Toestemming elektriciteitsgegevens uit te lezen",
-                "description": "Of toestemming is gegeven om elektriciteitsgegevens uit te lezen."
-            },
-            "smart_meter": {
-                "name": "Slimme elektriciteitsmeter",
-                "description": "Of de elektriciteitsmeter een slimme meter is."
-            },
-            "gprs": {
-                "name": "GPRS-verbinding",
-                "description": "Of de meter een GPRS-verbinding heeft."
-            },
-            "analog": {
-                "name": "Analoge meter",
-                "description": "Of de aansluiting een analoge meter gebruikt."
-            },
-            "suitable_for_backfeeding": {
-                "name": "Teruglevering geschikt",
-                "description": "Of de aansluiting geschikt is voor teruglevering."
-            },
-            "suitable_for_dual_tariff": {
-                "name": "Dubbeltarief geschikt",
-                "description": "Of de meter dubbeltarief ondersteunt."
-            },
-            "backfeeding_energy": {
-                "name": "Teruglevering actief",
-                "description": "Of er momenteel elektriciteit wordt teruggeleverd."
-            },
-            "meter_fault_check_allowed": {
-                "name": "Meterstoring controleren toegestaan",
-                "description": "Of het controleren op een meterstoring is toegestaan."
-            },
-            "smart_meter_request_allowed": {
-                "name": "Slimme meter aanvragen toegestaan",
-                "description": "Of een slimme meter kan worden aangevraagd."
-            },
-            "net_metering": {
-                "name": "Salderingsregeling",
-                "description": "Of de salderingsregeling van toepassing is."
-            },
-            "gas_status": {
-                "name": "Gasstatus",
-                "description": "De status van de gasaansluiting."
-            },
-            "gas_contract_active": {
-                "name": "Gascontract actief",
-                "description": "Of het gascontract actief is."
-            },
-            "gas_permission_to_read_data": {
-                "name": "Toestemming gasgegevens uit te lezen",
-                "description": "Of toestemming is gegeven om gasgegevens uit te lezen."
-            },
-            "gas_meter_fault_check_allowed": {
-                "name": "Gasmeterstoring controleren toegestaan",
-                "description": "Of het controleren op een gasmeterstoring is toegestaan."
-            },
-            "gas_smart_meter": {
-                "name": "Slimme gasmeter",
-                "description": "Of de gasmeter een slimme meter is."
-            }
+    "error": {
+      "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw."
+    },
+    "step": {
+      "user": {
+        "title": "Inloggen bij Mijn Liander",
+        "description": "Inloggen is nodig om deze integratie te kunnen gebruiken.",
+        "data": {
+          "username": "Email",
+          "password": "Wachtwoord",
+          "timeout": "Timeout"
         }
+      },
+      "reauth": {
+        "title": "Opnieuw inloggen bij Mijn Liander",
+        "data": {
+          "username": "Email",
+          "password": "Wachtwoord",
+          "timeout": "Timeout"
+        }
+      }
     }
+  },
+  "entity": {
+    "sensor": {
+      "address": {
+        "name": "Adres"
+      },
+      "maximum_power": {
+        "name": "Maximaal Vermogen"
+      },
+      "electricity_ean": {
+        "name": "Elektriciteit EAN"
+      },
+      "connection_capacity": {
+        "name": "Aansluitcapaciteit"
+      },
+      "network_costs": {
+        "name": "Netwerkkosten"
+      },
+      "meter_number": {
+        "name": "Meter Nummer"
+      },
+      "number_of_registers": {
+        "name": "Aantal Telwerken"
+      },
+      "number_of_meters": {
+        "name": "Aantal Meters"
+      },
+      "number_of_phases": {
+        "name": "Aantal Fasen"
+      },
+      "feed_in_start_date": {
+        "name": "Startdatum teruglevering"
+      },
+      "generation_installations": {
+        "name": "Opwekinstallaties"
+      },
+      "storage_installations": {
+        "name": "Opslaginstallaties"
+      },
+      "gas_ean": {
+        "name": "Gas EAN"
+      },
+      "gas_connection_capacity": {
+        "name": "Gasaansluitcapaciteit"
+      },
+      "gas_network_costs": {
+        "name": "Gasnetwerkkosten"
+      },
+      "gas_maximum_capacity": {
+        "name": "Maximale gascapaciteit"
+      },
+      "gas_number_of_meters": {
+        "name": "Aantal gasmeters"
+      },
+      "gas_meter_number": {
+        "name": "Gasmeternummer"
+      },
+      "gas_number_of_registers": {
+        "name": "Aantal gastelwerken"
+      }
+    },
+    "binary_sensor": {
+      "status": {
+        "name": "Elektriciteitsstatus"
+      },
+      "contract_active": {
+        "name": "Elektriciteitscontract actief"
+      },
+      "permission_to_read_data": {
+        "name": "Toestemming elektriciteitsgegevens uit te lezen"
+      },
+      "smart_meter": {
+        "name": "Slimme elektriciteitsmeter"
+      },
+      "gprs": {
+        "name": "GPRS-verbinding"
+      },
+      "analog": {
+        "name": "Analoge meter"
+      },
+      "suitable_for_backfeeding": {
+        "name": "Teruglevering geschikt"
+      },
+      "suitable_for_dual_tariff": {
+        "name": "Dubbeltarief geschikt"
+      },
+      "backfeeding_energy": {
+        "name": "Teruglevering actief"
+      },
+      "meter_fault_check_allowed": {
+        "name": "Meterstoring controleren toegestaan"
+      },
+      "smart_meter_request_allowed": {
+        "name": "Slimme meter aanvragen toegestaan"
+      },
+      "net_metering": {
+        "name": "Salderingsregeling"
+      },
+      "gas_status": {
+        "name": "Gasstatus"
+      },
+      "gas_contract_active": {
+        "name": "Gascontract actief"
+      },
+      "gas_permission_to_read_data": {
+        "name": "Toestemming gasgegevens uit te lezen"
+      },
+      "gas_meter_fault_check_allowed": {
+        "name": "Gasmeterstoring controleren toegestaan"
+      },
+      "gas_smart_meter": {
+        "name": "Slimme gasmeter"
+      }
+    }
+  }
 }

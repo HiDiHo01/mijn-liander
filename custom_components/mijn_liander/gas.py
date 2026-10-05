@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol
 
 from .const import SERVICE_NAME_GAS
 
 
 class _ServiceEntityDescription(Protocol):
     service_name: str | None
-
-
-_Description = TypeVar("_Description", bound=_ServiceEntityDescription)
 
 
 def get_active_gas_connection(data: Any) -> dict[str, Any] | None:
@@ -41,10 +38,10 @@ def has_active_gas_contract(data: Any) -> bool:
     return get_active_gas_connection(data) is not None
 
 
-def filter_entity_descriptions(
-    descriptions: Iterable[_Description],
+def filter_entity_descriptions[Description: _ServiceEntityDescription](
+    descriptions: Iterable[Description],
     data: Any,
-) -> list[_Description]:
+) -> list[Description]:
     """Include gas descriptions only when an active gas contract is present."""
     gas_available = has_active_gas_contract(data)
     return [

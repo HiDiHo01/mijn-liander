@@ -37,9 +37,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     # This method sets up the component from YAML configuration
     # Example: setting up any services or initialization logic here
 
-    # Register any services if needed:
-    # hass.services.async_register(DOMAIN, "example_service", example_service_handler)
-
     # Returning True indicates that the setup was successful
     return True
 

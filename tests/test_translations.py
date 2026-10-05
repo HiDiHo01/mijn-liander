@@ -52,6 +52,7 @@ class EntityTranslationTests(unittest.TestCase):
                         translated = catalog.get(description.translation_key)
                         self.assertIsNotNone(translated)
                         self.assertTrue(translated["name"])
+                        self.assertNotIn("description", translated)
 
     def test_locales_have_matching_entity_translation_keys(self) -> None:
         """Every locale has the same entity translation keys as the source."""
