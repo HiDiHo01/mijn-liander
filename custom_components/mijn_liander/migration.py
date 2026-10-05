@@ -104,6 +104,17 @@ def _migrate_electricity_device(
 
     legacy_device = legacy_devices[0]
     if current_device is not None:
+        if not current_device.config_entries.issubset(
+            {config_entry.entry_id}
+        ):
+            _LOGGER.warning(
+                "Cannot merge Mijn Liander electricity devices for config "
+                "entry %s because the current device is associated with "
+                "another config entry",
+                config_entry.entry_id,
+            )
+            return
+
         current_entities = [
             entry
             for entry in entity_reg.entities.values()

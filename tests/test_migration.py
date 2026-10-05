@@ -319,6 +319,56 @@ class RegistryMigrationTests(unittest.TestCase):
         )
         self.assertEqual(foreign_entity.device_id, "current-device")
 
+    def test_do_not_merge_device_associated_with_another_config_entry(self) -> None:
+        """Keep a duplicate device if it is shared with another config entry."""
+        legacy_device = FakeDevice(
+            id="legacy-device",
+            identifiers={(DOMAIN, "entry-id", None)},
+            model="Elektra",
+            config_entries={"entry-id"},
+        )
+        current_device = FakeDevice(
+            id="current-device",
+            identifiers={(DOMAIN, "entry-id")},
+            model="Elektra",
+            config_entries={"entry-id", "other-entry"},
+        )
+        devices = FakeDeviceRegistry(legacy_device, current_device)
+        entities = FakeEntityRegistry()
+
+        with (
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_get",
+                return_value=devices,
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                return_value=list(devices.devices.values()),
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.entity_registry.async_get",
+                return_value=entities,
+            ),
+        ):
+            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
+
+        self.assertEqual(
+            set(devices.devices),
+            {"legacy-device", "current-device"},
+        )
+        self.assertEqual(
+            legacy_device.identifiers,
+            {(DOMAIN, "entry-id", None)},
+        )
+        self.assertEqual(
+            current_device.identifiers,
+            {(DOMAIN, "entry-id")},
+        )
+        self.assertEqual(
+            current_device.config_entries,
+            {"entry-id", "other-entry"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
