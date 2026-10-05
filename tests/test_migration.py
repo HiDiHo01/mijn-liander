@@ -10,7 +10,7 @@ from unittest.mock import patch
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.migration import (
     _migrate_electricity_device,
-    _migrate_sensor_unique_ids,
+    _migrate_entity_unique_ids,
 )
 
 
@@ -126,8 +126,8 @@ class RegistryMigrationTests(unittest.TestCase):
         )
         registry = FakeEntityRegistry(legacy)
 
-        _migrate_sensor_unique_ids(registry, self.config_entry)
-        _migrate_sensor_unique_ids(registry, self.config_entry)
+        _migrate_entity_unique_ids(registry, self.config_entry)
+        _migrate_entity_unique_ids(registry, self.config_entry)
 
         self.assertEqual(
             registry.entities["sensor.liander_address"].unique_id,
@@ -152,8 +152,8 @@ class RegistryMigrationTests(unittest.TestCase):
         )
         registry = FakeEntityRegistry(legacy, updated)
 
-        _migrate_sensor_unique_ids(registry, self.config_entry)
-        _migrate_sensor_unique_ids(registry, self.config_entry)
+        _migrate_entity_unique_ids(registry, self.config_entry)
+        _migrate_entity_unique_ids(registry, self.config_entry)
 
         self.assertEqual(
             list(registry.entities),
@@ -166,6 +166,24 @@ class RegistryMigrationTests(unittest.TestCase):
         self.assertEqual(
             registry.entities["sensor.liander_address"].entity_id,
             "sensor.liander_address",
+        )
+
+    def test_migrate_legacy_binary_sensor_unique_id(self) -> None:
+        """Legacy binary-sensor IDs are migrated using the shared ID format."""
+        legacy = FakeEntity(
+            entity_id="binary_sensor.liander_status",
+            unique_id="account@example.com.status",
+            domain="binary_sensor",
+            platform=DOMAIN,
+            config_entry_id=self.config_entry.entry_id,
+        )
+        registry = FakeEntityRegistry(legacy)
+
+        _migrate_entity_unique_ids(registry, self.config_entry)
+
+        self.assertEqual(
+            registry.entities["binary_sensor.liander_status"].unique_id,
+            "account@example.com_status",
         )
 
     def test_merge_duplicate_electricity_devices(self) -> None:

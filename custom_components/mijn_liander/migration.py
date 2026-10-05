@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def _migrate_sensor_unique_ids(
+def _migrate_entity_unique_ids(
     registry: entity_registry.EntityRegistry,
     config_entry: ConfigEntry,
 ) -> None:
@@ -27,7 +27,7 @@ def _migrate_sensor_unique_ids(
     ):
         if (
             entry.platform != DOMAIN
-            or entry.domain != "sensor"
+            or entry.domain not in {"sensor", "binary_sensor"}
             or not entry.unique_id.startswith(legacy_prefix)
         ):
             continue
@@ -139,5 +139,5 @@ async def async_migrate_registry(
     config_entry: ConfigEntry,
 ) -> None:
     """Migrate existing entity and device identities before platform setup."""
-    _migrate_sensor_unique_ids(entity_registry.async_get(hass), config_entry)
+    _migrate_entity_unique_ids(entity_registry.async_get(hass), config_entry)
     _migrate_electricity_device(hass, config_entry)
