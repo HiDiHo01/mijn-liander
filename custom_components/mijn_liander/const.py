@@ -9,7 +9,7 @@ DOMAIN = "mijn_liander"
 COMPONENT_TITLE = "Mijn Liander"
 
 UPDATE_INTERVAL = timedelta(minutes=360)
-VERSION = "2026.10.5"
+VERSION = "2026.10.6"
 ATTRIBUTION: Final[str] = "Data provided by Liander"
 MANUFACTURER: Final[str] = "Liander"
 

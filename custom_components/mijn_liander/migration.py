@@ -15,26 +15,65 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+LEGACY_BINARY_SENSOR_KEYS = {
+    "contract": "contract_active",
+    "toestemmingVoorUitlezen": "permission_to_read_data",
+    "slimmeMeter": "smart_meter",
+    "geschiktVoorTerugleveren": "suitable_for_backfeeding",
+    "geschiktVoorDubbeltarief": "suitable_for_dual_tariff",
+    "levertTerug": "backfeeding_energy",
+}
+
 
 def _migrate_entity_unique_ids(
     registry: entity_registry.EntityRegistry,
     config_entry: ConfigEntry,
 ) -> None:
     """Keep the legacy entity IDs while using the current unique ID format."""
-    legacy_prefix = f"{config_entry.unique_id}."
+    account_id = config_entry.unique_id
+    dotted_prefix = f"{account_id}."
+    underscored_prefix = f"{account_id}_"
+    obsolete_sensor_unique_ids = {
+        f"{dotted_prefix}status",
+        f"{underscored_prefix}status",
+    }
+    migrated_count = 0
+
     for entry in list(
         registry.entities.get_entries_for_config_entry_id(config_entry.entry_id)
     ):
-        if (
-            entry.platform != DOMAIN
-            or entry.domain not in {"sensor", "binary_sensor"}
-            or not entry.unique_id.startswith(legacy_prefix)
-        ):
+        if entry.platform != DOMAIN:
             continue
 
-        new_unique_id = (
-            f"{config_entry.unique_id}_{entry.unique_id[len(legacy_prefix):]}"
+        if (
+            entry.domain == "sensor"
+            and entry.unique_id in obsolete_sensor_unique_ids
+        ):
+            registry.async_remove(entry.entity_id)
+            migrated_count += 1
+            continue
+
+        if entry.domain not in {"sensor", "binary_sensor"}:
+            continue
+
+        if entry.unique_id.startswith(dotted_prefix):
+            legacy_key = entry.unique_id[len(dotted_prefix) :]
+        elif (
+            entry.domain == "binary_sensor"
+            and entry.unique_id.startswith(underscored_prefix)
+        ):
+            legacy_key = entry.unique_id[len(underscored_prefix) :]
+            if legacy_key not in LEGACY_BINARY_SENSOR_KEYS:
+                continue
+        else:
+            continue
+
+        current_key = (
+            LEGACY_BINARY_SENSOR_KEYS.get(legacy_key, legacy_key)
+            if entry.domain == "binary_sensor"
+            else legacy_key
         )
+        new_unique_id = f"{account_id}_{current_key}"
         existing_entity_id = registry.async_get_entity_id(
             entry.domain, entry.platform, new_unique_id
         )
@@ -53,10 +92,18 @@ def _migrate_entity_unique_ids(
                 existing_entity_id,
                 new_entity_id=entry.entity_id,
             )
+            migrated_count += 1
             continue
 
         registry.async_update_entity(
             entry.entity_id, new_unique_id=new_unique_id
+        )
+        migrated_count += 1
+
+    if migrated_count:
+        _LOGGER.info(
+            "Migrated or removed %s legacy Mijn Liander entity registry entries",
+            migrated_count,
         )
 
 

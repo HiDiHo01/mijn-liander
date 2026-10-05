@@ -186,6 +186,76 @@ class RegistryMigrationTests(unittest.TestCase):
             "account@example.com_status",
         )
 
+    def test_migrate_renamed_legacy_binary_sensor_keys(self) -> None:
+        """Legacy binary-sensor keys are migrated to their current names."""
+        key_mappings = {
+            "contract": "contract_active",
+            "toestemmingVoorUitlezen": "permission_to_read_data",
+            "slimmeMeter": "smart_meter",
+            "geschiktVoorTerugleveren": "suitable_for_backfeeding",
+            "geschiktVoorDubbeltarief": "suitable_for_dual_tariff",
+            "levertTerug": "backfeeding_energy",
+        }
+        legacy_entities = [
+            FakeEntity(
+                entity_id=f"binary_sensor.liander_{legacy_key}",
+                unique_id=f"account@example.com_{legacy_key}",
+                domain="binary_sensor",
+                platform=DOMAIN,
+                config_entry_id=self.config_entry.entry_id,
+            )
+            for legacy_key in key_mappings
+        ]
+        duplicate = FakeEntity(
+            entity_id="binary_sensor.liander_contract_active_new",
+            unique_id="account@example.com_contract_active",
+            domain="binary_sensor",
+            platform=DOMAIN,
+            config_entry_id=self.config_entry.entry_id,
+        )
+        registry = FakeEntityRegistry(*legacy_entities, duplicate)
+
+        _migrate_entity_unique_ids(registry, self.config_entry)
+        _migrate_entity_unique_ids(registry, self.config_entry)
+
+        self.assertEqual(
+            set(registry.entities),
+            {
+                f"binary_sensor.liander_{legacy_key}"
+                for legacy_key in key_mappings
+            },
+        )
+        for legacy_key, current_key in key_mappings.items():
+            entity = registry.entities[
+                f"binary_sensor.liander_{legacy_key}"
+            ]
+            self.assertEqual(
+                entity.unique_id,
+                f"account@example.com_{current_key}",
+            )
+
+    def test_remove_obsolete_legacy_status_sensor(self) -> None:
+        """Remove the old sensor now represented by a binary sensor."""
+        legacy_status = FakeEntity(
+            entity_id="sensor.liander_status",
+            unique_id="account@example.com.status",
+            domain="sensor",
+            platform=DOMAIN,
+            config_entry_id=self.config_entry.entry_id,
+        )
+        previously_migrated_status = FakeEntity(
+            entity_id="sensor.liander_status_2",
+            unique_id="account@example.com_status",
+            domain="sensor",
+            platform=DOMAIN,
+            config_entry_id=self.config_entry.entry_id,
+        )
+        registry = FakeEntityRegistry(legacy_status, previously_migrated_status)
+
+        _migrate_entity_unique_ids(registry, self.config_entry)
+
+        self.assertEqual(registry.entities, {})
+
     def test_merge_duplicate_electricity_devices(self) -> None:
         """Move current entities onto the legacy device and retain its ID."""
         legacy_device = FakeDevice(
