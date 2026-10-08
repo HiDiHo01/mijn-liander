@@ -1,7 +1,5 @@
 """Migrate registry entries created by earlier Mijn Liander releases."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -12,6 +10,7 @@ from .const import DOMAIN, SERVICE_NAME_ELEKTRA, SERVICE_NAME_GAS
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,12 +56,12 @@ def _migrate_entity_unique_ids(
             continue
 
         if entry.unique_id.startswith(dotted_prefix):
-            legacy_key = entry.unique_id[len(dotted_prefix) :]
+            legacy_key = entry.unique_id[len(dotted_prefix):]
         elif (
             entry.domain == "binary_sensor"
             and entry.unique_id.startswith(underscored_prefix)
         ):
-            legacy_key = entry.unique_id[len(underscored_prefix) :]
+            legacy_key = entry.unique_id[len(underscored_prefix):]
             if legacy_key not in LEGACY_BINARY_SENSOR_KEYS:
                 continue
         else:
@@ -75,8 +74,11 @@ def _migrate_entity_unique_ids(
         )
         new_unique_id = f"{account_id}_{current_key}"
         existing_entity_id = registry.async_get_entity_id(
-            entry.domain, entry.platform, new_unique_id
+            entry.domain,
+            entry.platform,
+            new_unique_id,
         )
+
         if existing_entity_id is not None:
             existing = registry.entities.get_entry(existing_entity_id)
             if existing is None or existing.config_entry_id != config_entry.entry_id:
@@ -87,6 +89,7 @@ def _migrate_entity_unique_ids(
                     new_unique_id,
                 )
                 continue
+
             registry.async_remove(entry.entity_id)
             registry.async_update_entity(
                 existing_entity_id,
@@ -96,7 +99,8 @@ def _migrate_entity_unique_ids(
             continue
 
         registry.async_update_entity(
-            entry.entity_id, new_unique_id=new_unique_id
+            entry.entity_id,
+            new_unique_id=new_unique_id,
         )
         migrated_count += 1
 
@@ -115,9 +119,12 @@ def _migrate_electricity_device(
     device_reg = device_registry.async_get(hass)
     entity_reg = entity_registry.async_get(hass)
     current_identifier = (DOMAIN, config_entry.entry_id)
+
     entry_devices = device_registry.async_entries_for_config_entry(
-        device_reg, config_entry.entry_id
+        device_reg,
+        config_entry.entry_id,
     )
+
     current_device = next(
         (
             device
@@ -126,18 +133,21 @@ def _migrate_electricity_device(
         ),
         None,
     )
-    legacy_identifier_prefix = (DOMAIN, config_entry.entry_id)
+
+    legacy_identifier_prefix = current_identifier
     legacy_devices = [
         device
         for device in entry_devices
-        if device.model == SERVICE_NAME_ELEKTRA
-        and current_identifier not in device.identifiers
-        and any(
-            identifier[:2] == legacy_identifier_prefix
-            and len(identifier) > 2
-            for identifier in device.identifiers
+        if (
+            device.model == SERVICE_NAME_ELEKTRA
+            and current_identifier not in device.identifiers
+            and any(
+                identifier[:2] == legacy_identifier_prefix
+                and len(identifier) > 2
+                for identifier in device.identifiers
+            )
+            and device.config_entry_id == config_entry.entry_id
         )
-        and device.config_entries.issubset({config_entry.entry_id})
     ]
 
     if len(legacy_devices) != 1:
@@ -150,10 +160,9 @@ def _migrate_electricity_device(
         return
 
     legacy_device = legacy_devices[0]
+
     if current_device is not None:
-        if not current_device.config_entries.issubset(
-            {config_entry.entry_id}
-        ):
+        if current_device.config_entry_id != config_entry.entry_id:
             _LOGGER.warning(
                 "Cannot merge Mijn Liander electricity devices for config "
                 "entry %s because the current device is associated with "
@@ -167,6 +176,7 @@ def _migrate_electricity_device(
             for entry in entity_reg.entities.values()
             if entry.device_id == current_device.id
         ]
+
         if any(
             entry.config_entry_id != config_entry.entry_id
             or entry.platform != DOMAIN
@@ -182,8 +192,10 @@ def _migrate_electricity_device(
 
         for entry in current_entities:
             entity_reg.async_update_entity(
-                entry.entity_id, device_id=legacy_device.id
+                entry.entity_id,
+                device_id=legacy_device.id,
             )
+
         device_reg.async_remove_device(current_device.id)
 
     device_reg.async_update_device(
@@ -200,14 +212,19 @@ def remove_inactive_gas_registry_entries(
     device_reg = device_registry.async_get(hass)
     entity_reg = entity_registry.async_get(hass)
     gas_identifier = (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_GAS}")
+
     gas_devices = [
         device
         for device in device_registry.async_entries_for_config_entry(
-            device_reg, config_entry.entry_id
+            device_reg,
+            config_entry.entry_id,
         )
-        if gas_identifier in device.identifiers
-        and device.model == SERVICE_NAME_GAS
+        if (
+            gas_identifier in device.identifiers
+            and device.model == SERVICE_NAME_GAS
+        )
     ]
+
     if len(gas_devices) > 1:
         _LOGGER.warning(
             "Found multiple Mijn Liander gas devices for config entry %s; "
@@ -215,11 +232,13 @@ def remove_inactive_gas_registry_entries(
             config_entry.entry_id,
         )
         return
+
     if not gas_devices:
         return
 
     gas_device = gas_devices[0]
     removed_entities = 0
+
     for entry in list(entity_reg.entities.values()):
         if (
             entry.device_id == gas_device.id
@@ -233,9 +252,10 @@ def remove_inactive_gas_registry_entries(
         entry.device_id == gas_device.id
         for entry in entity_reg.entities.values()
     )
+
     if (
         not has_remaining_entities
-        and gas_device.config_entries.issubset({config_entry.entry_id})
+        and gas_device.config_entry_id == config_entry.entry_id
     ):
         device_reg.async_remove_device(gas_device.id)
 
@@ -252,5 +272,11 @@ async def async_migrate_registry(
     config_entry: ConfigEntry,
 ) -> None:
     """Migrate existing entity and device identities before platform setup."""
-    _migrate_entity_unique_ids(entity_registry.async_get(hass), config_entry)
-    _migrate_electricity_device(hass, config_entry)
+    _migrate_entity_unique_ids(
+        entity_registry.async_get(hass),
+        config_entry,
+    )
+    _migrate_electricity_device(
+        hass,
+        config_entry,
+    )
