@@ -1,9 +1,6 @@
 """Tests for conditional Mijn Liander gas entities."""
 
-from __future__ import annotations
-
 import asyncio
-import unittest
 from dataclasses import dataclass
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -52,9 +49,10 @@ class FakeDevice:
     """Device registry entry used by gas cleanup tests."""
 
     id: str
-    identifiers: set[tuple[str, str]]
+    identifiers: set[tuple[object, ...]]
     model: str
     config_entries: set[str]
+    config_entry_id: str
 
 
 class FakeEntityCollection(dict[str, FakeEntity]):
@@ -65,11 +63,13 @@ class FakeEntityRegistry:
     """Minimal entity registry."""
 
     def __init__(self, *entities: FakeEntity) -> None:
+        """Initialize the fake entity registry."""
         self.entities = FakeEntityCollection(
             (entity.entity_id, entity) for entity in entities
         )
 
     def async_remove(self, entity_id: str) -> None:
+        """Remove an entity from the fake registry."""
         self.entities.pop(entity_id)
 
 
@@ -77,18 +77,20 @@ class FakeDeviceRegistry:
     """Minimal device registry."""
 
     def __init__(self, *devices: FakeDevice) -> None:
+        """Initialize the fake device registry."""
         self.devices = {device.id: device for device in devices}
 
     def async_remove_device(self, device_id: str) -> None:
+        """Remove a device from the fake registry."""
         self.devices.pop(device_id)
 
 
-class GasEntityTests(unittest.TestCase):
+class GasEntityTests:
     """Verify gas contract detection and registry cleanup."""
 
     def test_only_active_gas_contract_counts_as_available(self) -> None:
         """Missing, malformed, or inactive gas contracts do not qualify."""
-        for data in (
+        invalid_data = (
             None,
             {},
             [],
@@ -97,11 +99,12 @@ class GasEntityTests(unittest.TestCase):
             gas_data(False),
             gas_data(None),
             [{"aansluitingen": {"gas": [{"contract": "false"}]}}],
-        ):
-            with self.subTest(data=data):
-                self.assertFalse(has_active_gas_contract(data))
+        )
 
-        self.assertTrue(has_active_gas_contract(gas_data()))
+        for data in invalid_data:
+            assert not has_active_gas_contract(data)
+
+        assert has_active_gas_contract(gas_data())
 
     def test_entities_use_the_first_active_gas_connection(self) -> None:
         """Ignore earlier inactive connections consistently across gas entities."""
@@ -121,7 +124,8 @@ class GasEntityTests(unittest.TestCase):
         ]
         active_connection = data[0]["aansluitingen"]["gas"][1]
 
-        self.assertIs(get_active_gas_connection(data), active_connection)
+        assert get_active_gas_connection(data) is active_connection
+
         sensor = SimpleNamespace(
             coordinator=SimpleNamespace(data=data),
             entity_description=next(
@@ -137,57 +141,70 @@ class GasEntityTests(unittest.TestCase):
             ),
         )
 
-        self.assertEqual(LianderSensor.native_value.fget(sensor), "active-ean")
-        self.assertTrue(LianderBinarySensor._get_is_on(binary_sensor))
+        assert LianderSensor.native_value.fget(sensor) == "active-ean"
+        assert LianderBinarySensor._get_is_on(binary_sensor)
 
     def test_gas_descriptions_are_filtered_for_electricity_only_accounts(
         self,
     ) -> None:
-        """Electricity and account entities remain; gas entities are omitted."""
-        sensors = filter_entity_descriptions(SENSOR_DESCRIPTIONS, gas_data(False))
+        """Keep electricity/account entities and omit gas entities."""
+        sensors = filter_entity_descriptions(
+            SENSOR_DESCRIPTIONS,
+            gas_data(False),
+        )
         binary_sensors = filter_entity_descriptions(
-            BINARY_SENSOR_DESCRIPTIONS, gas_data(False)
+            BINARY_SENSOR_DESCRIPTIONS,
+            gas_data(False),
         )
 
-        self.assertEqual(len(sensors), 12)
-        self.assertEqual(len(binary_sensors), 12)
-        self.assertTrue(
-            all(description.service_name != SERVICE_NAME_GAS for description in sensors)
+        assert len(sensors) == 12
+        assert len(binary_sensors) == 12
+
+        assert all(
+            description.service_name != SERVICE_NAME_GAS
+            for description in sensors
         )
-        self.assertTrue(
-            all(
-                description.service_name != SERVICE_NAME_GAS
-                for description in binary_sensors
-            )
+        assert all(
+            description.service_name != SERVICE_NAME_GAS
+            for description in binary_sensors
         )
 
     def test_all_gas_descriptions_are_kept_for_active_contract(self) -> None:
-        """An active gas contract retains all gas sensors and binary sensors."""
-        sensors = filter_entity_descriptions(SENSOR_DESCRIPTIONS, gas_data())
+        """Keep all gas sensors and binary sensors for an active contract."""
+        sensors = filter_entity_descriptions(
+            SENSOR_DESCRIPTIONS,
+            gas_data(),
+        )
         binary_sensors = filter_entity_descriptions(
-            BINARY_SENSOR_DESCRIPTIONS, gas_data()
+            BINARY_SENSOR_DESCRIPTIONS,
+            gas_data(),
         )
 
-        self.assertEqual(len(sensors), len(SENSOR_DESCRIPTIONS))
-        self.assertEqual(len(binary_sensors), len(BINARY_SENSOR_DESCRIPTIONS))
-        self.assertEqual(
-            sum(item.service_name == SERVICE_NAME_GAS for item in sensors), 7
-        )
-        self.assertEqual(
-            sum(item.service_name == SERVICE_NAME_GAS for item in binary_sensors),
-            5,
-        )
+        assert len(sensors) == len(SENSOR_DESCRIPTIONS)
+        assert len(binary_sensors) == len(BINARY_SENSOR_DESCRIPTIONS)
+
+        assert sum(
+            item.service_name == SERVICE_NAME_GAS for item in sensors
+        ) == 7
+        assert sum(
+            item.service_name == SERVICE_NAME_GAS
+            for item in binary_sensors
+        ) == 5
 
     def test_remove_gas_registry_entries_when_contract_is_absent(self) -> None:
-        """Remove old gas entities and their now-unused dedicated device."""
+        """Remove gas entities and their now-unused dedicated device."""
         entry = SimpleNamespace(entry_id="entry-id")
+
         device = FakeDevice(
             id="gas-device",
             identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
             model=SERVICE_NAME_GAS,
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
+
         device_registry = FakeDeviceRegistry(device)
+
         entity_registry = FakeEntityRegistry(
             *(
                 FakeEntity(
@@ -215,7 +232,8 @@ class GasEntityTests(unittest.TestCase):
                 return_value=device_registry,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=[device],
             ),
             patch(
@@ -223,20 +241,28 @@ class GasEntityTests(unittest.TestCase):
                 return_value=entity_registry,
             ),
         ):
-            remove_inactive_gas_registry_entries(SimpleNamespace(), entry)
+            remove_inactive_gas_registry_entries(
+                SimpleNamespace(),
+                entry,
+            )
 
-        self.assertEqual(entity_registry.entities, {})
-        self.assertEqual(device_registry.devices, {})
+        assert entity_registry.entities == {}
+        assert device_registry.devices == {}
 
-    def test_gas_cleanup_preserves_shared_device_and_other_entities(self) -> None:
-        """Do not delete a gas device still used by another config entry."""
+    def test_gas_cleanup_preserves_shared_device_and_other_entities(
+        self,
+    ) -> None:
+        """Keep a gas device that still contains another integration entity."""
         entry = SimpleNamespace(entry_id="entry-id")
+
         device = FakeDevice(
             id="gas-device",
             identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
             model=SERVICE_NAME_GAS,
             config_entries={"entry-id", "other-entry"},
+            config_entry_id="entry-id",
         )
+
         own_entity = FakeEntity(
             entity_id="sensor.gas_own",
             platform=DOMAIN,
@@ -249,8 +275,12 @@ class GasEntityTests(unittest.TestCase):
             config_entry_id="other-entry",
             device_id="gas-device",
         )
+
         device_registry = FakeDeviceRegistry(device)
-        entity_registry = FakeEntityRegistry(own_entity, other_entity)
+        entity_registry = FakeEntityRegistry(
+            own_entity,
+            other_entity,
+        )
 
         with (
             patch(
@@ -258,7 +288,8 @@ class GasEntityTests(unittest.TestCase):
                 return_value=device_registry,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=[device],
             ),
             patch(
@@ -266,16 +297,121 @@ class GasEntityTests(unittest.TestCase):
                 return_value=entity_registry,
             ),
         ):
-            remove_inactive_gas_registry_entries(SimpleNamespace(), entry)
+            remove_inactive_gas_registry_entries(
+                SimpleNamespace(),
+                entry,
+            )
 
-        self.assertEqual(
-            set(entity_registry.entities),
-            {"sensor.other"},
+        assert set(entity_registry.entities) == {"sensor.other"}
+        assert set(device_registry.devices) == {"gas-device"}
+
+    def test_gas_cleanup_preserves_device_owned_by_another_config_entry(
+        self,
+    ) -> None:
+        """Keep a gas device whose owning config entry is different."""
+        entry = SimpleNamespace(entry_id="entry-id")
+
+        device = FakeDevice(
+            id="gas-device",
+            identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
+            model=SERVICE_NAME_GAS,
+            config_entries={"entry-id", "other-entry"},
+            config_entry_id="other-entry",
         )
-        self.assertEqual(set(device_registry.devices), {"gas-device"})
+
+        own_entity = FakeEntity(
+            entity_id="sensor.gas_own",
+            platform=DOMAIN,
+            config_entry_id="entry-id",
+            device_id="gas-device",
+        )
+
+        device_registry = FakeDeviceRegistry(device)
+        entity_registry = FakeEntityRegistry(own_entity)
+
+        with (
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_get",
+                return_value=device_registry,
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
+                return_value=[device],
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.entity_registry.async_get",
+                return_value=entity_registry,
+            ),
+        ):
+            remove_inactive_gas_registry_entries(
+                SimpleNamespace(),
+                entry,
+            )
+
+        assert entity_registry.entities == {}
+        assert set(device_registry.devices) == {"gas-device"}
+
+    def test_gas_cleanup_preserves_multiple_gas_devices(self) -> None:
+        """Leave multiple gas devices untouched to avoid ambiguous cleanup."""
+        entry = SimpleNamespace(entry_id="entry-id")
+
+        first_device = FakeDevice(
+            id="gas-device-1",
+            identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
+            model=SERVICE_NAME_GAS,
+            config_entries={"entry-id"},
+            config_entry_id="entry-id",
+        )
+        second_device = FakeDevice(
+            id="gas-device-2",
+            identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
+            model=SERVICE_NAME_GAS,
+            config_entries={"entry-id"},
+            config_entry_id="entry-id",
+        )
+
+        entity = FakeEntity(
+            entity_id="sensor.gas",
+            platform=DOMAIN,
+            config_entry_id="entry-id",
+            device_id="gas-device-1",
+        )
+
+        device_registry = FakeDeviceRegistry(
+            first_device,
+            second_device,
+        )
+        entity_registry = FakeEntityRegistry(entity)
+
+        with (
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_get",
+                return_value=device_registry,
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
+                return_value=[first_device, second_device],
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.entity_registry.async_get",
+                return_value=entity_registry,
+            ),
+        ):
+            remove_inactive_gas_registry_entries(
+                SimpleNamespace(),
+                entry,
+            )
+
+        assert set(device_registry.devices) == {
+            "gas-device-1",
+            "gas-device-2",
+        }
+        assert set(entity_registry.entities) == {"sensor.gas"}
 
 
-class GasContractMonitorTests(unittest.IsolatedAsyncioTestCase):
+class GasContractMonitorTests:
     """Verify gas contract changes reload platform entity descriptions."""
 
     async def test_reload_when_gas_contract_is_added_or_removed(self) -> None:
@@ -283,6 +419,7 @@ class GasContractMonitorTests(unittest.IsolatedAsyncioTestCase):
         listener = None
 
         def add_listener(callback):
+            """Register the coordinator listener."""
             nonlocal listener
             listener = callback
             return lambda: None
@@ -301,7 +438,15 @@ class GasContractMonitorTests(unittest.IsolatedAsyncioTestCase):
             async_create_task=asyncio.create_task,
         )
 
-        _async_monitor_gas_contract(hass, entry, coordinator, False)
+        _async_monitor_gas_contract(
+            hass,
+            entry,
+            coordinator,
+            False,
+        )
+
+        assert listener is not None
+
         coordinator.data = gas_data()
         listener()
         await asyncio.sleep(0)
@@ -312,8 +457,4 @@ class GasContractMonitorTests(unittest.IsolatedAsyncioTestCase):
         listener()
         await asyncio.sleep(0)
 
-        self.assertEqual(reload.await_count, 2)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert reload.await_count == 2
