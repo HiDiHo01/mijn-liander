@@ -1,4 +1,3 @@
-# __init__.py
 """The Mijn Liander integration."""
 import logging
 
@@ -32,24 +31,10 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
     return coordinator
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Mijn Liander component from configuration.yaml."""
-    # This method sets up the component from YAML configuration
-    # Example: setting up any services or initialization logic here
-
-    # Returning True indicates that the setup was successful
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mijn Liander from a config entry."""
     _LOGGER.debug(
         "Setting up Liander component for entry: %s", entry.entry_id)
-    # Retrieve configuration data from entry
-    # username = entry.data.get("username")
-    # password = entry.data.get("password")
-
-    # Setup coordinator
     try:
         coordinator = await async_setup_coordinator(hass, entry)
     except Exception as err:
@@ -63,21 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     gas_contract_active = has_active_gas_contract(coordinator.data)
     if not gas_contract_active:
         remove_inactive_gas_registry_entries(hass, entry)
-    # hass.data[DOMAIN]["credentials"] = {
-    #     "username": username,
-    #     "password": password
-    # }
 
-    # Forward the entry to other platforms (e.g., sensor, binary_sensor)
+  # Forward the entry to other platforms (e.g., sensor, binary_sensor)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     _async_monitor_gas_contract(
         hass, entry, coordinator, gas_contract_active
     )
-
-    # Optionally, update the entry's unique ID and title
-    # hass.config_entries.async_update_entry(entry, unique_id="mijn_liander")
-    # entry.title = "Mijn Liander"
-    # Returning True indicates that the setup was successful.
     return True
 
 
@@ -133,5 +109,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Unload the platforms for the entry (e.g., sensor, binary_sensor)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Return the result of unloading
     return unload_ok
