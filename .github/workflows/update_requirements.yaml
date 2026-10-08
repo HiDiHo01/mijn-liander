@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-requirements:
@@ -28,10 +29,42 @@ jobs:
       - name: Regenerate requirements with hashes
         run: pip-compile requirements_test.in --upgrade --generate-hashes
 
-      - name: Commit and push changes
+      - name: Commit and push requirements update
+        id: update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+          git checkout -B chore/update-requirements
+      
           git add requirements_test.txt
-          git commit -m "chore: update requirements_test.txt" || echo "No changes to commit"
-          git push
+      
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to commit"
+            exit 0
+          fi
+      
+          git commit -m "chore: update requirements_test.txt"
+          git push --force-with-lease origin chore/update-requirements
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      
+      - name: Create or update pull request
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh pr view \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "HiDiHo01:chore/update-requirements" \
+            --json number \
+            --jq '.number' >/dev/null 2>&1; then
+            echo "Pull request already exists"
+          else
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head chore/update-requirements \
+              --title "chore: update requirements_test.txt" \
+              --body "Automated update of the pip-compiled test requirements."
+          fi
