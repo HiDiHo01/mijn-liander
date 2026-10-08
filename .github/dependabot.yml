@@ -1,9 +1,13 @@
 version: 2
+
 updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "pyjwt"
+      - dependency-name: "cryptography"
 
   - package-ecosystem: "github-actions"
     directory: "/"
