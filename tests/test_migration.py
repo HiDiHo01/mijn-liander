@@ -1,8 +1,5 @@
 """Tests for migrating Mijn Liander entity and device registry entries."""
 
-from __future__ import annotations
-
-import unittest
 from dataclasses import dataclass
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -30,8 +27,10 @@ class FakeEntityCollection(dict[str, FakeEntity]):
     """Small subset of the entity registry collection API."""
 
     def get_entries_for_config_entry_id(
-        self, config_entry_id: str
+        self,
+        config_entry_id: str,
     ) -> list[FakeEntity]:
+        """Return entities belonging to a config entry."""
         return [
             entry
             for entry in self.values()
@@ -39,6 +38,7 @@ class FakeEntityCollection(dict[str, FakeEntity]):
         ]
 
     def get_entry(self, entity_id: str) -> FakeEntity | None:
+        """Return an entity by entity ID."""
         return self.get(entity_id)
 
 
@@ -46,13 +46,18 @@ class FakeEntityRegistry:
     """Small subset of the entity registry API."""
 
     def __init__(self, *entries: FakeEntity) -> None:
+        """Initialize the fake entity registry."""
         self.entities = FakeEntityCollection(
             (entry.entity_id, entry) for entry in entries
         )
 
     def async_get_entity_id(
-        self, domain: str, platform: str, unique_id: str
+        self,
+        domain: str,
+        platform: str,
+        unique_id: str,
     ) -> str | None:
+        """Return the entity ID matching domain, platform, and unique ID."""
         return next(
             (
                 entry.entity_id
@@ -65,18 +70,29 @@ class FakeEntityRegistry:
         )
 
     def async_remove(self, entity_id: str) -> None:
+        """Remove an entity from the fake registry."""
         self.entities.pop(entity_id)
 
-    def async_update_entity(self, entity_id: str, **changes: object) -> None:
+    def async_update_entity(
+        self,
+        entity_id: str,
+        **changes: object,
+    ) -> None:
+        """Update an entity in the fake registry."""
         entry = self.entities[entity_id]
+
         for key, value in changes.items():
             if key == "new_entity_id":
+                if not isinstance(value, str):
+                    raise TypeError("new_entity_id must be a string")
+
                 self.entities.pop(entity_id)
                 entry.entity_id = value
                 self.entities[value] = entry
-            else:
-                attribute = "unique_id" if key == "new_unique_id" else key
-                setattr(entry, attribute, value)
+                continue
+
+            attribute = "unique_id" if key == "new_unique_id" else key
+            setattr(entry, attribute, value)
 
 
 @dataclass
@@ -87,36 +103,44 @@ class FakeDevice:
     identifiers: set[tuple[object, ...]]
     model: str
     config_entries: set[str]
+    config_entry_id: str
 
 
 class FakeDeviceRegistry:
     """Small subset of the device registry API."""
 
     def __init__(self, *devices: FakeDevice) -> None:
+        """Initialize the fake device registry."""
         self.devices = {device.id: device for device in devices}
 
     def async_remove_device(self, device_id: str) -> None:
+        """Remove a device from the fake registry."""
         self.devices.pop(device_id)
 
     def async_update_device(
-        self, device_id: str, *, new_identifiers: set[tuple[str, str]]
+        self,
+        device_id: str,
+        *,
+        new_identifiers: set[tuple[object, ...]],
     ) -> FakeDevice:
+        """Update device identifiers in the fake registry."""
         device = self.devices[device_id]
-        device.identifiers = set(new_identifiers)
+        device.identifiers = new_identifiers
         return device
 
 
-class RegistryMigrationTests(unittest.TestCase):
-    """Verify legacy registry identities migrate without losing entity IDs."""
+class RegistryMigrationTests:
+    """Verify legacy registry identities migrate safely and idempotently."""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
+        """Create a fake config entry used by each test."""
         self.config_entry = SimpleNamespace(
             entry_id="entry-id",
             unique_id="account@example.com",
         )
 
     def test_migrate_legacy_sensor_unique_id(self) -> None:
-        """Legacy sensor IDs are preserved when their unique ID changes."""
+        """Preserve the legacy sensor entity ID while updating its unique ID."""
         legacy = FakeEntity(
             entity_id="sensor.liander_address",
             unique_id="account@example.com.address",
@@ -129,13 +153,13 @@ class RegistryMigrationTests(unittest.TestCase):
         _migrate_entity_unique_ids(registry, self.config_entry)
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        self.assertEqual(
-            registry.entities["sensor.liander_address"].unique_id,
-            "account@example.com_address",
+        assert (
+            registry.entities["sensor.liander_address"].unique_id
+            == "account@example.com_address"
         )
 
     def test_migrate_sensor_when_updated_duplicate_exists(self) -> None:
-        """Keep the legacy entity ID and replace its duplicate registry entry."""
+        """Keep the legacy entity ID when the current unique ID already exists."""
         legacy = FakeEntity(
             entity_id="sensor.liander_address",
             unique_id="account@example.com.address",
@@ -155,21 +179,18 @@ class RegistryMigrationTests(unittest.TestCase):
         _migrate_entity_unique_ids(registry, self.config_entry)
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        self.assertEqual(
-            list(registry.entities),
-            ["sensor.liander_address"],
+        assert list(registry.entities) == ["sensor.liander_address"]
+        assert (
+            registry.entities["sensor.liander_address"].unique_id
+            == "account@example.com_address"
         )
-        self.assertEqual(
-            registry.entities["sensor.liander_address"].unique_id,
-            "account@example.com_address",
-        )
-        self.assertEqual(
-            registry.entities["sensor.liander_address"].entity_id,
-            "sensor.liander_address",
+        assert (
+            registry.entities["sensor.liander_address"].entity_id
+            == "sensor.liander_address"
         )
 
     def test_migrate_legacy_binary_sensor_unique_id(self) -> None:
-        """Legacy binary-sensor IDs are migrated using the shared ID format."""
+        """Migrate a legacy binary-sensor ID using the shared ID format."""
         legacy = FakeEntity(
             entity_id="binary_sensor.liander_status",
             unique_id="account@example.com.status",
@@ -181,13 +202,13 @@ class RegistryMigrationTests(unittest.TestCase):
 
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        self.assertEqual(
-            registry.entities["binary_sensor.liander_status"].unique_id,
-            "account@example.com_status",
+        assert (
+            registry.entities["binary_sensor.liander_status"].unique_id
+            == "account@example.com_status"
         )
 
     def test_migrate_renamed_legacy_binary_sensor_keys(self) -> None:
-        """Legacy binary-sensor keys are migrated to their current names."""
+        """Migrate legacy binary-sensor keys to their current unique IDs."""
         key_mappings = {
             "contract": "contract_active",
             "toestemmingVoorUitlezen": "permission_to_read_data",
@@ -196,6 +217,7 @@ class RegistryMigrationTests(unittest.TestCase):
             "geschiktVoorDubbeltarief": "suitable_for_dual_tariff",
             "levertTerug": "backfeeding_energy",
         }
+
         legacy_entities = [
             FakeEntity(
                 entity_id=f"binary_sensor.liander_{legacy_key}",
@@ -206,6 +228,7 @@ class RegistryMigrationTests(unittest.TestCase):
             )
             for legacy_key in key_mappings
         ]
+
         duplicate = FakeEntity(
             entity_id="binary_sensor.liander_contract_active_new",
             unique_id="account@example.com_contract_active",
@@ -213,29 +236,23 @@ class RegistryMigrationTests(unittest.TestCase):
             platform=DOMAIN,
             config_entry_id=self.config_entry.entry_id,
         )
+
         registry = FakeEntityRegistry(*legacy_entities, duplicate)
 
         _migrate_entity_unique_ids(registry, self.config_entry)
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        self.assertEqual(
-            set(registry.entities),
-            {
-                f"binary_sensor.liander_{legacy_key}"
-                for legacy_key in key_mappings
-            },
-        )
+        assert set(registry.entities) == {
+            f"binary_sensor.liander_{legacy_key}"
+            for legacy_key in key_mappings
+        }
+
         for legacy_key, current_key in key_mappings.items():
-            entity = registry.entities[
-                f"binary_sensor.liander_{legacy_key}"
-            ]
-            self.assertEqual(
-                entity.unique_id,
-                f"account@example.com_{current_key}",
-            )
+            entity = registry.entities[f"binary_sensor.liander_{legacy_key}"]
+            assert entity.unique_id == f"account@example.com_{current_key}"
 
     def test_remove_obsolete_legacy_status_sensor(self) -> None:
-        """Remove the old sensor now represented by a binary sensor."""
+        """Remove the obsolete sensor status entity and its migrated duplicate."""
         legacy_status = FakeEntity(
             entity_id="sensor.liander_status",
             unique_id="account@example.com.status",
@@ -250,25 +267,64 @@ class RegistryMigrationTests(unittest.TestCase):
             platform=DOMAIN,
             config_entry_id=self.config_entry.entry_id,
         )
-        registry = FakeEntityRegistry(legacy_status, previously_migrated_status)
+        registry = FakeEntityRegistry(
+            legacy_status,
+            previously_migrated_status,
+        )
 
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        self.assertEqual(registry.entities, {})
+        assert registry.entities == {}
+
+    def test_do_not_migrate_unrelated_platform_entity(self) -> None:
+        """Leave entities from another integration untouched."""
+        entity = FakeEntity(
+            entity_id="sensor.other_integration",
+            unique_id="account@example.com.address",
+            domain="sensor",
+            platform="other_integration",
+            config_entry_id=self.config_entry.entry_id,
+        )
+        registry = FakeEntityRegistry(entity)
+
+        _migrate_entity_unique_ids(registry, self.config_entry)
+
+        assert registry.entities["sensor.other_integration"].unique_id == (
+            "account@example.com.address"
+        )
+
+    def test_do_not_migrate_entity_from_another_config_entry(self) -> None:
+        """Leave an entity from another config entry untouched."""
+        entity = FakeEntity(
+            entity_id="sensor.liander_other",
+            unique_id="account@example.com.address",
+            domain="sensor",
+            platform=DOMAIN,
+            config_entry_id="other-entry",
+        )
+        registry = FakeEntityRegistry(entity)
+
+        _migrate_entity_unique_ids(registry, self.config_entry)
+
+        assert registry.entities["sensor.liander_other"].unique_id == (
+            "account@example.com.address"
+        )
 
     def test_merge_duplicate_electricity_devices(self) -> None:
-        """Move current entities onto the legacy device and retain its ID."""
+        """Move current entities to the legacy device and retain its ID."""
         legacy_device = FakeDevice(
             id="legacy-device",
             identifiers={(DOMAIN, "entry-id", None)},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         current_device = FakeDevice(
             id="current-device",
             identifiers={(DOMAIN, "entry-id")},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         entity = FakeEntity(
             entity_id="sensor.liander_new_value",
@@ -278,7 +334,10 @@ class RegistryMigrationTests(unittest.TestCase):
             config_entry_id=self.config_entry.entry_id,
             device_id="current-device",
         )
-        devices = FakeDeviceRegistry(legacy_device, current_device)
+        devices = FakeDeviceRegistry(
+            legacy_device,
+            current_device,
+        )
         entities = FakeEntityRegistry(entity)
 
         with (
@@ -287,7 +346,8 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=devices,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=list(devices.devices.values()),
             ),
             patch(
@@ -295,23 +355,27 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=entities,
             ),
         ):
-            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
-            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
 
-        self.assertEqual(set(devices.devices), {"legacy-device"})
-        self.assertEqual(
-            legacy_device.identifiers,
-            {(DOMAIN, "entry-id")},
-        )
-        self.assertEqual(entity.device_id, "legacy-device")
+        assert set(devices.devices) == {"legacy-device"}
+        assert legacy_device.identifiers == {(DOMAIN, "entry-id")}
+        assert entity.device_id == "legacy-device"
 
     def test_migrate_legacy_electricity_device_identity(self) -> None:
-        """Update a legacy device identity when no duplicate exists yet."""
+        """Update a legacy device identity when no duplicate exists."""
         legacy_device = FakeDevice(
             id="legacy-device",
             identifiers={(DOMAIN, "entry-id", None)},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         devices = FakeDeviceRegistry(legacy_device)
         entities = FakeEntityRegistry()
@@ -322,7 +386,8 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=devices,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=list(devices.devices.values()),
             ),
             patch(
@@ -330,27 +395,29 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=entities,
             ),
         ):
-            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
 
-        self.assertEqual(set(devices.devices), {"legacy-device"})
-        self.assertEqual(
-            legacy_device.identifiers,
-            {(DOMAIN, "entry-id")},
-        )
+        assert set(devices.devices) == {"legacy-device"}
+        assert legacy_device.identifiers == {(DOMAIN, "entry-id")}
 
     def test_do_not_merge_device_with_foreign_entities(self) -> None:
-        """Leave device registry untouched if the duplicate has unrelated entities."""
+        """Leave a duplicate device with foreign entities untouched."""
         legacy_device = FakeDevice(
             id="legacy-device",
             identifiers={(DOMAIN, "entry-id", None)},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         current_device = FakeDevice(
             id="current-device",
             identifiers={(DOMAIN, "entry-id")},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         foreign_entity = FakeEntity(
             entity_id="sensor.other_integration",
@@ -360,7 +427,10 @@ class RegistryMigrationTests(unittest.TestCase):
             config_entry_id="other-entry",
             device_id="current-device",
         )
-        devices = FakeDeviceRegistry(legacy_device, current_device)
+        devices = FakeDeviceRegistry(
+            legacy_device,
+            current_device,
+        )
         entities = FakeEntityRegistry(foreign_entity)
 
         with (
@@ -369,7 +439,8 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=devices,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=list(devices.devices.values()),
             ),
             patch(
@@ -377,33 +448,42 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=entities,
             ),
         ):
-            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
 
-        self.assertEqual(
-            set(devices.devices),
-            {"legacy-device", "current-device"},
-        )
-        self.assertEqual(
-            legacy_device.identifiers,
-            {(DOMAIN, "entry-id", None)},
-        )
-        self.assertEqual(foreign_entity.device_id, "current-device")
+        assert set(devices.devices) == {
+            "legacy-device",
+            "current-device",
+        }
+        assert legacy_device.identifiers == {
+            (DOMAIN, "entry-id", None)
+        }
+        assert foreign_entity.device_id == "current-device"
 
-    def test_do_not_merge_device_associated_with_another_config_entry(self) -> None:
-        """Keep a duplicate device if it is shared with another config entry."""
+    def test_do_not_merge_device_associated_with_another_config_entry(
+        self,
+    ) -> None:
+        """Keep a duplicate device owned by another config entry."""
         legacy_device = FakeDevice(
             id="legacy-device",
             identifiers={(DOMAIN, "entry-id", None)},
             model="Elektra",
             config_entries={"entry-id"},
+            config_entry_id="entry-id",
         )
         current_device = FakeDevice(
             id="current-device",
             identifiers={(DOMAIN, "entry-id")},
             model="Elektra",
             config_entries={"entry-id", "other-entry"},
+            config_entry_id="other-entry",
         )
-        devices = FakeDeviceRegistry(legacy_device, current_device)
+        devices = FakeDeviceRegistry(
+            legacy_device,
+            current_device,
+        )
         entities = FakeEntityRegistry()
 
         with (
@@ -412,7 +492,8 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=devices,
             ),
             patch(
-                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
                 return_value=list(devices.devices.values()),
             ),
             patch(
@@ -420,25 +501,73 @@ class RegistryMigrationTests(unittest.TestCase):
                 return_value=entities,
             ),
         ):
-            _migrate_electricity_device(SimpleNamespace(), self.config_entry)
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
 
-        self.assertEqual(
-            set(devices.devices),
-            {"legacy-device", "current-device"},
-        )
-        self.assertEqual(
-            legacy_device.identifiers,
-            {(DOMAIN, "entry-id", None)},
-        )
-        self.assertEqual(
-            current_device.identifiers,
-            {(DOMAIN, "entry-id")},
-        )
-        self.assertEqual(
-            current_device.config_entries,
-            {"entry-id", "other-entry"},
-        )
+        assert set(devices.devices) == {
+            "legacy-device",
+            "current-device",
+        }
+        assert legacy_device.identifiers == {
+            (DOMAIN, "entry-id", None)
+        }
+        assert current_device.identifiers == {(DOMAIN, "entry-id")}
+        assert current_device.config_entries == {
+            "entry-id",
+            "other-entry",
+        }
 
+    def test_do_not_merge_multiple_legacy_devices(self) -> None:
+        """Leave the registry unchanged when multiple legacy devices exist."""
+        legacy_device_one = FakeDevice(
+            id="legacy-device-1",
+            identifiers={(DOMAIN, "entry-id", None)},
+            model="Elektra",
+            config_entries={"entry-id"},
+            config_entry_id="entry-id",
+        )
+        legacy_device_two = FakeDevice(
+            id="legacy-device-2",
+            identifiers={(DOMAIN, "entry-id", "legacy")},
+            model="Elektra",
+            config_entries={"entry-id"},
+            config_entry_id="entry-id",
+        )
+        devices = FakeDeviceRegistry(
+            legacy_device_one,
+            legacy_device_two,
+        )
+        entities = FakeEntityRegistry()
 
-if __name__ == "__main__":
-    unittest.main()
+        with (
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_get",
+                return_value=devices,
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.device_registry."
+                "async_entries_for_config_entry",
+                return_value=list(devices.devices.values()),
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.entity_registry.async_get",
+                return_value=entities,
+            ),
+        ):
+            _migrate_electricity_device(
+                SimpleNamespace(),
+                self.config_entry,
+            )
+
+        assert set(devices.devices) == {
+            "legacy-device-1",
+            "legacy-device-2",
+        }
+        assert legacy_device_one.identifiers == {
+            (DOMAIN, "entry-id", None)
+        }
+        assert legacy_device_two.identifiers == {
+            (DOMAIN, "entry-id", "legacy")
+        }
