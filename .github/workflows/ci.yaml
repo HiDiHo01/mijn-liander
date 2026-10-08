@@ -48,16 +48,19 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
-      - name: Install pip-tools
-        run: pip install pip-tools
-      - name: Regenerate requirements with hashes
-        run: pip-compile requirements_test.in --generate-hashes
+  
       - name: Install test dependencies
-        # PyRIC is published only as an sdist; the lock pins its hash.
-        run: "python -m pip install --require-hashes --only-binary=:all: --no-binary=pyric -r requirements_test.txt"
+        run: |
+          python -m pip install \
+            --require-hashes \
+            --only-binary=:all: \
+            --no-binary=pyric \
+            -r requirements_test.txt
+  
       - name: Run tests
         run: python -m pytest -q
