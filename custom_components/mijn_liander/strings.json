@@ -6,7 +6,12 @@
       "reauth_successful": "Re-authentication successful."
     },
     "error": {
-      "invalid_auth": "The credentials were not accepted. Check your username and password."
+      "invalid_auth": "The credentials were not accepted. Check your username and password.",
+      "cannot_connect": "Failed to connect to Mijn Liander. Check your network connection.",
+      "service_unavailable": "The Mijn Liander service is currently unavailable. Please try again later.",
+      "too_many_requests": "Too many requests to Mijn Liander. Please try again later.",
+      "invalid_input": "Invalid input provided. Please check the entered values.",
+      "unknown": "An unexpected error occurred. Please try again."
     },
     "step": {
       "user": {
@@ -16,6 +21,9 @@
           "username": "Email",
           "password": "Password",
           "timeout": "Timeout"
+        },
+        "data_description": {
+          "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       },
       "reauth": {
@@ -24,6 +32,9 @@
           "username": "Email",
           "password": "Password",
           "timeout": "Timeout"
+        },
+        "data_description": {
+          "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       }
     }

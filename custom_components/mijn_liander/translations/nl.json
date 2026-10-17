@@ -6,7 +6,12 @@
       "reauth_successful": "Opnieuw inloggen gelukt"
     },
     "error": {
-      "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw."
+      "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw.",
+      "cannot_connect": "Kan geen verbinding maken met Mijn Liander. Controleer de netwerkverbinding.",
+      "service_unavailable": "De Mijn Liander dienst is momenteel niet beschikbaar. Probeer het later opnieuw.",
+      "too_many_requests": "Te veel verzoeken naar Mijn Liander. Probeer het later opnieuw.",
+      "invalid_input": "Ongeldige invoer. Controleer de ingevoerde waarden.",
+      "unknown": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
     },
     "step": {
       "user": {
@@ -16,6 +21,9 @@
           "username": "Email",
           "password": "Wachtwoord",
           "timeout": "Timeout"
+        },
+        "data_description": {
+          "timeout": "Verbindingstime-out in seconden voor verzoeken naar Mijn Liander (1-30 seconden)."
         }
       },
       "reauth": {
@@ -24,6 +32,9 @@
           "username": "Email",
           "password": "Wachtwoord",
           "timeout": "Timeout"
+        },
+        "data_description": {
+          "timeout": "Verbindingstime-out in seconden voor verzoeken naar Mijn Liander (1-30 seconden)."
         }
       }
     }
