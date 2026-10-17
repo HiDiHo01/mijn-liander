@@ -54,7 +54,7 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
         return {"status": "error", "error": _map_http_error(e)}
     except aiohttp.ClientError as e:
         _LOGGER.error("Network error validating credentials: %s", e)
-        return {"status": "error", "error": "network_error"}
+        return {"status": "error", "error": "cannot_connect"}
 
 
 def _map_http_error(error: aiohttp.ClientResponseError) -> str:
@@ -69,16 +69,16 @@ def _map_http_error(error: aiohttp.ClientResponseError) -> str:
     """
     status_error_mapping = {
         401: "invalid_auth",
-        403: "forbidden",
-        404: "not_found",
+        403: "invalid_auth",
+        404: "cannot_connect",
         429: "too_many_requests",
         503: "service_unavailable",
     }
 
-    error_code = status_error_mapping.get(error.status, "unknown_error")
+    error_code = status_error_mapping.get(error.status, "unknown")
 
-    if error_code == "unknown_error":
-        _LOGGER.error("Unhandled HTTP error [%s]: %s", error.status, error)
+    if error_code == "unknown":
+        _LOGGER.error("Unhandled HTTP error [%s]", error.status)
     else:
         _LOGGER.debug(
             "Mapped HTTP error [%s] to error code '%s'", error.status, error_code)
@@ -134,9 +134,8 @@ class ConfigFlow(config_entries.ConfigFlow):
                     return result
                 else:
                     _LOGGER.error("Validation failed: %s", validation_result)
-                    error_code = validation_result.get(
-                        "error", "unknown_error")
-                    errors["base"] = self.map_error_to_message(error_code)
+                    errors["base"] = validation_result.get(
+                        "error", "unknown")
 
             except vol.Invalid as e:
                 _LOGGER.error("Schema validation failed: %s", e)
@@ -144,26 +143,13 @@ class ConfigFlow(config_entries.ConfigFlow):
 
             except Exception as e:
                 _LOGGER.error("Unexpected exception during validation: %s", e)
-                errors["base"] = f"unknown_error: {e}"
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors
         )
-
-    @staticmethod
-    def map_error_to_message(error_code: str) -> str:
-        """Map error code to user-friendly error message."""
-        error_mapping = {
-            "invalid_auth": "Invalid username or password.",
-            "service_unavailable": "The service is currently unavailable. Please try again later.",
-            "network_error": "Network error. Check your internet connection.",
-            "invalid_timeout": "The timeout value is invalid. Please provide a value between 1 and 30 seconds.",
-            "already_configured": "This entry is already configured. Please use a different username or update the existing configuration.",
-            "unknown_error": "An unknown error occurred. Please try again."
-        }
-        return error_mapping.get(error_code, "unknown_error")
 
     async def async_step_reauth(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle re-authentication if the credentials become invalid."""
@@ -183,7 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow):
                 return self.async_abort(reason="reauth_successful")
             else:
                 errors = {"base": validation_result.get(
-                    "error", "unknown_error")}
+                    "error", "unknown")}
 
         return self.async_show_form(
             step_id="reauth",
