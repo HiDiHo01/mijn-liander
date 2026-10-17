@@ -21,7 +21,7 @@ jobs:
           category: integration
 
   hassfest:
-    name: Home Assistant validation
+    name: hassfest
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
