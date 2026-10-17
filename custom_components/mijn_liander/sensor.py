@@ -47,21 +47,12 @@ class LianderSensorEntityDescription(SensorEntityDescription):
     icon_inactive: str | None = None
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
-    # translation_placeholders: Mapping[str, str] | None = None
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     options: list[str] | None = None
     state_class: SensorStateClass | None = None
     suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
-
-    # def __post_init__(self):
-    # if self.value_fn is None:
-    #     self.value_fn = lambda data: STATE_UNKNOWN
-    # if self.attr_fn is None:
-    #     self.attr_fn = lambda data: {}
-    # if self.translation_placeholders is None:
-    #     self.translation_placeholders = {}
 
 
 SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
@@ -232,8 +223,6 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         self.entity_description = description
         self.entry = entry
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        # self._attr_name = description.name or "Unnamed Sensor"
-        # self._attr_translation_key = description.translation_key
         self._attributes = SensorAttributes(
             name=(description.name if isinstance(description.name, str) else "Unnamed Sensor"),
             device_class=description.device_class or None,
@@ -264,23 +253,6 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             sw_version=VERSION,
         )
 
-#     @property
-#     def name(self) -> str | None:
-#         """Return the translated name of the sensor."""
-#         return self._attributes.name or "Unnamed Sensor"
-
-#     @property
-#     def device_class(self) -> SensorDeviceClass | None:
-#         return self._attributes.device_class
-
-#     @property
-#     def state_class(self) -> SensorStateClass | None:
-#         return self._attributes.state_class
-
-#     @property
-#     def native_unit_of_measurement(self) -> str | None:
-#         return self._attributes.native_unit_of_measurement
-
     @property
     def icon(self) -> str | None:  # type: ignore[override]
         """Return the icon depending on sensor activity."""
@@ -292,13 +264,56 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         """Determine if the sensor is active."""
         return self.native_value not in ["In bedrijf", "Active"]
 
-#     @property
-#     def translation_key(self) -> str | None:
-#         """Return the translation key for the sensor, if any."""
-#         return self._attributes.translation_key
+    def _get_address_value(self, data: list) -> str | None:
+        """Get address string from coordinator data."""
+        for account in data:
+            if not isinstance(account, dict):
+                continue
+            address = account.get("adres")
+            if isinstance(address, dict):
+                street = address.get("straat", "")
+                house_number = address.get("huisnummer", "")
+                addition = address.get("toevoeging", "")
+                postal_code = address.get("postcode", "")
+                city = address.get("plaats", "")
+                return f"{street} {house_number}{addition} {postal_code} {city}".strip()
+        return None
 
-    # @property
-    # def native_value(self) -> str | int | None:
+    def _get_connection_value(self, connection: dict, key: str) -> str | int | float | None:
+        """Get sensor value from connection data."""
+        connection_fields = {
+            "electricity_ean": "ean",
+            "connection_capacity": "aansluitwaarde",
+            "network_costs": "netwerkkosten",
+            "maximum_power": "maximaalVermogen",
+            "feed_in_start_date": "levertTerugVanaf",
+            "gas_ean": "ean",
+            "gas_connection_capacity": "aansluitwaarde",
+            "gas_network_costs": "netwerkkosten",
+            "gas_maximum_capacity": "maximaleCapaciteit",
+        }
+        if key in connection_fields:
+            return connection.get(connection_fields[key])
+        if key == "generation_installations":
+            return len(connection.get("opwekinstallaties", []) or [])
+        if key == "storage_installations":
+            return len(connection.get("opslaginstallaties", []) or [])
+
+        meters = connection.get("meters", []) or []
+        if key in {"number_of_meters", "gas_number_of_meters"}:
+            return len(meters)
+        if not meters or not isinstance(meters[0], dict):
+            return None
+
+        meter_fields = {
+            "meter_number": "meternummer",
+            "number_of_registers": "aantalTelwerken",
+            "number_of_phases": "aantalFasen",
+            "gas_meter_number": "meternummer",
+            "gas_number_of_registers": "aantalTelwerken",
+        }
+        return meters[0].get(meter_fields[key]) if key in meter_fields else None
+
     @property
     def native_value(self) -> str | int | float | None:
         """Return the current state of the sensor based on coordinator data."""
@@ -309,18 +324,7 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             return None
 
         if self.entity_description.key == "address":
-            for account in data:
-                if not isinstance(account, dict):
-                    continue
-                address = account.get("adres")
-                if isinstance(address, dict):
-                    street = address.get("straat", "")
-                    house_number = address.get("huisnummer", "")
-                    addition = address.get("toevoeging", "")
-                    postal_code = address.get("postcode", "")
-                    city = address.get("plaats", "")
-                    return f"{street} {house_number}{addition} {postal_code} {city}".strip()
-            return None
+            return self._get_address_value(data)
 
         connection_type = (
             "gas"
@@ -347,40 +351,4 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         if connection is None:
             return None
 
-        key = self.entity_description.key
-        connection_fields = {
-            "electricity_ean": "ean",
-            "connection_capacity": "aansluitwaarde",
-            "network_costs": "netwerkkosten",
-            "maximum_power": "maximaalVermogen",
-            "feed_in_start_date": "levertTerugVanaf",
-            "gas_ean": "ean",
-            "gas_connection_capacity": "aansluitwaarde",
-            "gas_network_costs": "netwerkkosten",
-            "gas_maximum_capacity": "maximaleCapaciteit",
-        }
-        if key in connection_fields:
-            return connection.get(connection_fields[key])
-        if key == "generation_installations":
-            return len(connection.get("opwekinstallaties", []) or [])
-        if key == "storage_installations":
-            return len(connection.get("opslaginstallaties", []) or [])
-
-        meters = connection.get("meters", []) or []
-        meter_counts = {
-            "number_of_meters",
-            "gas_number_of_meters",
-        }
-        if key in meter_counts:
-            return len(meters)
-        if not meters or not isinstance(meters[0], dict):
-            return None
-
-        meter_fields = {
-            "meter_number": "meternummer",
-            "number_of_registers": "aantalTelwerken",
-            "number_of_phases": "aantalFasen",
-            "gas_meter_number": "meternummer",
-            "gas_number_of_registers": "aantalTelwerken",
-        }
-        return meters[0].get(meter_fields[key]) if key in meter_fields else None
+        return self._get_connection_value(connection, self.entity_description.key)

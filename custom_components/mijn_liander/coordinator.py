@@ -1,15 +1,15 @@
 """
-This module defines the `LianderDataUpdateCoordinator` class for integrating with the Liander API 
+This module defines the `LianderDataUpdateCoordinator` class for integrating with the Liander API
 to fetch and manage data updates related to energy usage, electrical connections, and more.
 
-The `LianderDataUpdateCoordinator` is a custom implementation of the `DataUpdateCoordinator` 
-from Home Assistant, designed to periodically fetch data from the Liander API. It handles authentication 
+The `LianderDataUpdateCoordinator` is a custom implementation of the `DataUpdateCoordinator`
+from Home Assistant, designed to periodically fetch data from the Liander API. It handles authentication
 via JWT tokens, manages token renewal, and ensures the token remains valid before making requests to the API.
 
 Key Features:
 - **Token Management:** Automatically renews the authentication token when expired or nearing expiry.
 - **Periodic Data Fetching:** Utilizes Home Assistant's `DataUpdateCoordinator` to fetch data at defined intervals.
-- **Error Handling:** Implements robust error handling to manage issues such as expired tokens, network errors, 
+- **Error Handling:** Implements robust error handling to manage issues such as expired tokens, network errors,
   and invalid responses.
 - **Integration with Liander API:** Fetches data from the Liander API, such as energy usage statistics and electrical connections.
 
@@ -19,11 +19,11 @@ Module Functionality:
 - Ensures the token is valid before each data fetch.
 - Periodically requests data from the Liander API and processes the response.
 
-By using this module, the integration keeps energy-related data up-to-date in Home Assistant while ensuring 
+By using this module, the integration keeps energy-related data up-to-date in Home Assistant while ensuring
 that authentication with the Liander API is securely managed.
 
 Classes:
-    LianderDataUpdateCoordinator: A custom coordinator that manages interaction with the Liander API 
+    LianderDataUpdateCoordinator: A custom coordinator that manages interaction with the Liander API
     to periodically fetch data, handle token renewal, and manage errors.
 
 Methods:
@@ -63,8 +63,8 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the Liander API.
 
     This class handles the renewal of authentication tokens, checking if
-    the token is expired, and fetching data from the Liander API. It uses 
-    the home assistant DataUpdateCoordinator to periodically update the 
+    the token is expired, and fetching data from the Liander API. It uses
+    the home assistant DataUpdateCoordinator to periodically update the
     fetched data.
     """
 
@@ -112,13 +112,15 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Request data: %s", login_data)
 
         try:
-            async with asyncio.timeout(10):
-                async with self._session.post(API_LOGIN_URL, json=login_data, timeout=timeout) as response:
-                    response.raise_for_status()
-                    if response.status == 401:
-                        _LOGGER.error("Token expired or unauthorized.")
-                        raise UpdateFailed("Unauthorized, token expired.")
-                    login_response = await response.json()
+            async with (
+                asyncio.timeout(10),
+                self._session.post(API_LOGIN_URL, json=login_data, timeout=timeout) as response,
+            ):
+                response.raise_for_status()
+                if response.status == 401:
+                    _LOGGER.error("Token expired or unauthorized.")
+                    raise UpdateFailed("Unauthorized, token expired.")
+                login_response = await response.json()
 
             self._token = login_response.get("jwt")
             if not self._token:
@@ -153,8 +155,8 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
     async def get_valid_token(self) -> str:
         """Ensure that we have a valid token.
 
-        This method checks if a valid token is available. If not, it will 
-        initiate token renewal. If the token is expired, it will renew the 
+        This method checks if a valid token is available. If not, it will
+        initiate token renewal. If the token is expired, it will renew the
         token and return it.
 
         Returns:
@@ -203,7 +205,7 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the Liander API.
 
         This method fetches data from the Liander API using the current
-        authentication token. If the token is valid and the request is 
+        authentication token. If the token is valid and the request is
         successful, it returns the fetched data.
 
         Returns:

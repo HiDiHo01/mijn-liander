@@ -23,7 +23,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install pip-tools
-        run: python -m pip install pip-tools
+        run: python -m pip install --only-binary :all: pip-tools==7.4.1
 
       - name: Compile test requirements
         run: |
