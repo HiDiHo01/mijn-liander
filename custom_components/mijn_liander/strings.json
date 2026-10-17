@@ -7,6 +7,8 @@
     },
     "error": {
       "invalid_auth": "The credentials were not accepted. Check your username and password.",
+      "forbidden": "Access forbidden. Check your account permissions.",
+      "not_found": "Failed to connect to Mijn Liander endpoint.",
       "cannot_connect": "Failed to connect to Mijn Liander. Check your network connection.",
       "service_unavailable": "The Mijn Liander service is currently unavailable. Please try again later.",
       "too_many_requests": "Too many requests to Mijn Liander. Please try again later.",

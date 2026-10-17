@@ -69,8 +69,8 @@ def _map_http_error(error: aiohttp.ClientResponseError) -> str:
     """
     status_error_mapping = {
         401: "invalid_auth",
-        403: "invalid_auth",
-        404: "cannot_connect",
+        403: "forbidden",
+        404: "not_found",
         429: "too_many_requests",
         503: "service_unavailable",
     }
