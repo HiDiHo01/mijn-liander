@@ -72,7 +72,6 @@ class LianderBinaryEntityDescription(BinarySensorEntityDescription):
     state_class: str | None = None
     native_unit_of_measurement: str | None = None
     suggested_display_precision: int | None = None
-    # authenticated: bool = False
     service_name: str | None = SERVICE_NAME_ELEKTRA
     value_fn: Callable[[dict], StateType] | None = None
     attr_fn: Callable[[dict], dict[str, StateType | list[object]]] = field(
@@ -220,7 +219,6 @@ class LianderBinarySensor(
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
-        # self.entity_description = description
         self.entity_description: LianderBinaryEntityDescription = description  # type: ignore[override]
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
@@ -342,7 +340,6 @@ class LianderBinarySensor(
                 for elektra in account.get('aansluitingen', {}).get('elektra', [])
             ]
         }
-        # _LOGGER.debug("Extra state attributes set: %s", attributes)
         return attributes
 
     async def async_added_to_hass(self) -> None:
