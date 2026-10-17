@@ -77,6 +77,7 @@ Use the repository's current CI workflows and README as the source of truth for 
 ```shell
 python -m pip install --require-hashes --only-binary=:all: --no-binary=pyric -r requirements_test.txt
 python -m pytest -q
+python -m pip install ruff==0.16.10
 ruff check --config ruff.toml custom_components/mijn_liander tests
 ```
 
