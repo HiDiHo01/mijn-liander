@@ -40,6 +40,6 @@ python -m pytest -q
 ```
 
 PyRIC has no published wheel, so only its hash-verified source archive is allowed.
-Run Ruff 0.16.10 with `ruff check --config ruff.toml custom_components/mijn_liander tests`.
+To run the lint check, install Ruff 0.16.10 with `python -m pip install ruff==0.16.10` and run `ruff check --config ruff.toml custom_components/mijn_liander tests`.
 To update the dependency lock, edit `requirements_test.in` and run the `uv pip compile`
 command recorded at the top of `requirements_test.txt`.
