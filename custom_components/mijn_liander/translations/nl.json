@@ -7,6 +7,8 @@
     },
     "error": {
       "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw.",
+      "forbidden": "Toegang geweigerd. Controleer uw accountrechten.",
+      "not_found": "Kan geen verbinding maken met het Mijn Liander eindpunt.",
       "cannot_connect": "Kan geen verbinding maken met Mijn Liander. Controleer de netwerkverbinding.",
       "service_unavailable": "De Mijn Liander dienst is momenteel niet beschikbaar. Probeer het later opnieuw.",
       "too_many_requests": "Te veel verzoeken naar Mijn Liander. Probeer het later opnieuw.",
