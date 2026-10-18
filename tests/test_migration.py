@@ -129,7 +129,7 @@ class FakeDeviceRegistry:
         return device
 
 
-class RegistryMigrationTests:
+class TestRegistryMigration:
     """Verify legacy registry identities migrate safely and idempotently."""
 
     def setup_method(self) -> None:

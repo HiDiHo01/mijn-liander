@@ -23,8 +23,8 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
     # Optionally, perform an initial update to ensure data is available at setup
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        _LOGGER.error("Failed to fetch initial data: %s", err)
+    except Exception:
+        _LOGGER.exception("Failed to fetch initial data")
         raise
 
     # await coordinator.async_refresh()  # Initial fetch to populate data
@@ -37,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Setting up Liander component for entry: %s", entry.entry_id)
     try:
         coordinator = await async_setup_coordinator(hass, entry)
-    except Exception as err:
-        _LOGGER.error("Error setting up coordinator: %s", err)
+    except Exception:
+        _LOGGER.exception("Error setting up coordinator")
         return False
 
     # Avoid overwriting hass.data[DOMAIN] entirely

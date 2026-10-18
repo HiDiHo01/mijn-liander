@@ -85,7 +85,7 @@ class FakeDeviceRegistry:
         self.devices.pop(device_id)
 
 
-class GasEntityTests:
+class TestGasEntities:
     """Verify gas contract detection and registry cleanup."""
 
     def test_only_active_gas_contract_counts_as_available(self) -> None:
@@ -126,23 +126,24 @@ class GasEntityTests:
 
         assert get_active_gas_connection(data) is active_connection
 
-        sensor = SimpleNamespace(
-            coordinator=SimpleNamespace(data=data),
-            entity_description=next(
-                item for item in SENSOR_DESCRIPTIONS if item.key == "gas_ean"
-            ),
+        config_entry = SimpleNamespace(entry_id="entry-id", unique_id="unique-id")
+        sensor = LianderSensor(
+            SimpleNamespace(data=data),
+            next(item for item in SENSOR_DESCRIPTIONS if item.key == "gas_ean"),
+            config_entry,
         )
-        binary_sensor = SimpleNamespace(
-            coordinator=SimpleNamespace(data=data),
-            entity_description=next(
+        binary_sensor = LianderBinarySensor(
+            SimpleNamespace(data=data),
+            next(
                 item
                 for item in BINARY_SENSOR_DESCRIPTIONS
                 if item.key == "gas_contract_active"
             ),
+            config_entry,
         )
 
-        assert LianderSensor.native_value.fget(sensor) == "active-ean"
-        assert LianderBinarySensor._get_is_on(binary_sensor)
+        assert sensor.native_value == "active-ean"
+        assert binary_sensor._get_is_on()
 
     def test_gas_descriptions_are_filtered_for_electricity_only_accounts(
         self,
@@ -411,50 +412,54 @@ class GasEntityTests:
         assert set(entity_registry.entities) == {"sensor.gas"}
 
 
-class GasContractMonitorTests:
+class TestGasContractMonitor:
     """Verify gas contract changes reload platform entity descriptions."""
 
-    async def test_reload_when_gas_contract_is_added_or_removed(self) -> None:
+    def test_reload_when_gas_contract_is_added_or_removed(self) -> None:
         """Reload when refreshed data changes gas entity availability."""
-        listener = None
 
-        def add_listener(callback):
-            """Register the coordinator listener."""
-            nonlocal listener
-            listener = callback
-            return lambda: None
+        async def _test() -> None:
+            listener = None
 
-        coordinator = SimpleNamespace(
-            data=[{"aansluitingen": {"gas": []}}],
-            async_add_listener=add_listener,
-        )
-        entry = SimpleNamespace(
-            entry_id="entry-id",
-            async_on_unload=lambda callback: None,
-        )
-        reload = AsyncMock(return_value=True)
-        hass = SimpleNamespace(
-            config_entries=SimpleNamespace(async_reload=reload),
-            async_create_task=asyncio.create_task,
-        )
+            def add_listener(callback):
+                """Register the coordinator listener."""
+                nonlocal listener
+                listener = callback
+                return lambda: None
 
-        _async_monitor_gas_contract(
-            hass,
-            entry,
-            coordinator,
-            False,
-        )
+            coordinator = SimpleNamespace(
+                data=[{"aansluitingen": {"gas": []}}],
+                async_add_listener=add_listener,
+            )
+            entry = SimpleNamespace(
+                entry_id="entry-id",
+                async_on_unload=lambda callback: None,
+            )
+            reload = AsyncMock(return_value=True)
+            hass = SimpleNamespace(
+                config_entries=SimpleNamespace(async_reload=reload),
+                async_create_task=asyncio.create_task,
+            )
 
-        assert listener is not None
+            _async_monitor_gas_contract(
+                hass,
+                entry,
+                coordinator,
+                False,
+            )
 
-        coordinator.data = gas_data()
-        listener()
-        await asyncio.sleep(0)
+            assert listener is not None
 
-        reload.assert_awaited_once_with("entry-id")
+            coordinator.data = gas_data()
+            listener()
+            await asyncio.sleep(0)
 
-        coordinator.data = gas_data(False)
-        listener()
-        await asyncio.sleep(0)
+            reload.assert_awaited_once_with("entry-id")
 
-        assert reload.await_count == 2
+            coordinator.data = gas_data(False)
+            listener()
+            await asyncio.sleep(0)
+
+            assert reload.await_count == 2
+
+        asyncio.run(_test())

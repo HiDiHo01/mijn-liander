@@ -22,6 +22,23 @@ from .const import (
     API_VERSION as LIANDER_API_VERSION,
 )
 
+LOG_REQUEST = "Request: %s %s"
+LOG_REQUEST_HEADERS = "Request headers: %s"
+LOG_RESPONSE_STATUS = "Response status: %s"
+LOG_RESPONSE_BODY = "Response body: %s"
+
+
+class LianderAPIError(Exception):
+    """Base exception for Liander API errors."""
+
+
+class LianderAuthenticationError(LianderAPIError):
+    """Exception raised when Liander API authentication fails."""
+
+
+class LianderFetchError(LianderAPIError):
+    """Exception raised when fetching data from Liander API fails."""
+
 
 class LianderAPI:
     API_VERSION = LIANDER_API_VERSION
@@ -30,6 +47,7 @@ class LianderAPI:
     API_AANSLUITINGEN_URL = LIANDER_API_AANSLUITINGEN_URL
     API_ME_URL = LIANDER_API_ME_URL
     API_AANVRAAGGEGEVENS_URL = LIANDER_API_AANVRAAGGEGEVENS_URL
+
     def __init__(self, username: str, password: str, session: aiohttp.ClientSession | None = None):
         """
         Initializes the Liander API object.
@@ -59,7 +77,7 @@ class LianderAPI:
         """
         Authenticates with the Liander API and stores the token.
 
-        :raises Exception: If authentication fails.
+        :raises LianderAuthenticationError: If authentication fails.
         """
         try:
             self.logger.debug("Authenticating with the Liander API.")
@@ -67,27 +85,23 @@ class LianderAPI:
                 self.API_LOGIN_URL,
                 json={"username": self.username, "password": self.password}
             ) as response:
-                self.logger.debug("Request: %s %s",
-                                  response.method, response.url)
-                self.logger.debug("Request headers: %s",
-                                  response.request_info.headers)
+                self.logger.debug(LOG_REQUEST, response.method, response.url)
+                self.logger.debug(
+                    LOG_REQUEST_HEADERS, response.request_info.headers
+                )
                 self.logger.debug("Request body: %s", self.session)
 
                 status = response.status
                 response_text = await response.text()
-                self.logger.debug("Response status: %s", status)
-                self.logger.debug("Response body: %s", await response.json())
+                self.logger.debug(LOG_RESPONSE_STATUS, status)
+                self.logger.debug(LOG_RESPONSE_BODY, await response.json())
                 response.raise_for_status()
 
                 if status == 200:
                     data = await response.json()
                     self.jwt = data.get("jwt")
-                    # if self.jwt:
-                    #     self.logger.debug("Response jwt_token: %s", self.jwt)
                     self.token = data.get("access_token") or self.jwt
                     self.refresh_token = data.get("refreshToken")
-                    # if self.token:
-                    #     self.logger.debug("Response token: %s", self.token)
                     self.session.headers.update(
                         {"Authorization": f"Bearer {self.jwt}"})
                     self.logger.info(
@@ -95,10 +109,14 @@ class LianderAPI:
                 else:
                     self.logger.error(
                         "Authentication failed with status code %s: %s", status, response_text)
-                    raise Exception(f"Authentication failed: {status}")
+                    raise LianderAuthenticationError(
+                        f"Authentication failed: {status}"
+                    )
         except aiohttp.ClientError as err:
             self.logger.error("Error during authentication: %s", err)
-            raise Exception(f"Authentication error: {err}")
+            raise LianderAuthenticationError(
+                f"Authentication error: {err}"
+            ) from err
 
     async def _refresh_token(self) -> None:
         """
@@ -114,38 +132,38 @@ class LianderAPI:
 
         :param url: The API endpoint URL.
         :return: Parsed JSON response.
-        :raises Exception: If the request fails.
+        :raises LianderFetchError: If the request fails.
         """
         await self._refresh_token()
         try:
             self.logger.debug("Fetching data from URL: %s", url)
             async with self.session.get(url) as response:
-                self.logger.debug("Request: %s %s",
-                                  response.method, response.url)
-                self.logger.debug("Request headers: %s",
-                                  response.request_info.headers)
+                self.logger.debug(LOG_REQUEST, response.method, response.url)
+                self.logger.debug(
+                    LOG_REQUEST_HEADERS, response.request_info.headers
+                )
 
                 status = response.status
                 response_text = await response.text()
-                self.logger.debug("Response status: %s", status)
-                self.logger.debug("Response body: %s", response_text)
+                self.logger.debug(LOG_RESPONSE_STATUS, status)
+                self.logger.debug(LOG_RESPONSE_BODY, response_text)
 
                 if status == 200:
                     return await response.json()
                 else:
                     self.logger.error(
                         "Failed to fetch data with status code %s: %s", status, response_text)
-                    raise Exception(f"Failed to fetch data: {status}")
+                    raise LianderFetchError(f"Failed to fetch data: {status}")
         except aiohttp.ClientError as err:
             self.logger.error("Error fetching data from %s: %s", url, err)
-            raise Exception(f"Error fetching data: {err}")
+            raise LianderFetchError(f"Error fetching data: {err}") from err
 
     async def fetch_aansluitingen(self) -> dict:
         """
         Fetches aansluitingen data from the Liander API.
 
         :return: Parsed JSON response.
-        :raises Exception: If the request fails.
+        :raises LianderFetchError: If the request fails.
         """
         return await self._fetch_data(self.API_AANSLUITINGEN_URL)
 
@@ -154,7 +172,7 @@ class LianderAPI:
         Fetches user profile data from the Liander API.
 
         :return: Parsed JSON response.
-        :raises Exception: If the request fails.
+        :raises LianderFetchError: If the request fails.
         """
         return await self._fetch_data(self.API_ME_URL)
 
@@ -163,7 +181,7 @@ class LianderAPI:
         Fetches aanvraaggegevens from the Liander API.
 
         :return: Parsed JSON response.
-        :raises Exception: If the request fails.
+        :raises LianderFetchError: If the request fails.
         """
         return await self._fetch_data(self.API_AANVRAAGGEGEVENS_URL)
 
@@ -173,7 +191,7 @@ class LianderAPI:
 
         :param ean: EAN of the connection to fetch.
         :return: Parsed JSON response.
-        :raises Exception: If the request fails.
+        :raises LianderFetchError: If the request fails.
         """
         url = (
             f"{self.API_BASE_URL}/api/v2/private/aansluiting/ean/"
@@ -191,16 +209,16 @@ class LianderAPI:
                 f"{self.API_BASE_URL}/api/{self.API_VERSION}/auth/logout"
             )
             async with self.session.post(logout_url) as response:
-                self.logger.debug("Request: %s %s",
-                                  response.method, response.url)
-                self.logger.debug("Request headers: %s",
-                                  response.request_info.headers)
+                self.logger.debug(LOG_REQUEST, response.method, response.url)
+                self.logger.debug(
+                    LOG_REQUEST_HEADERS, response.request_info.headers
+                )
 
                 status = response.status
                 response_text = await response.text()
-                self.logger.debug("Response status: %s", status)
+                self.logger.debug(LOG_RESPONSE_STATUS, status)
                 if response_text:
-                    self.logger.debug("Response body: %s", response_text)
+                    self.logger.debug(LOG_RESPONSE_BODY, response_text)
 
                 if status in (200, 204):
                     self.logger.info("Successfully logged out.")
