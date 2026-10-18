@@ -125,7 +125,9 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="gprs",
         translation_key="gprs",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:signal",
+        icon_inactive="mdi:signal-off",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -174,6 +176,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_status",
         translation_key="gas_status",
         icon="mdi:check-circle",
+        icon_inactive="mdi:cancel",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
