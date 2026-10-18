@@ -1,4 +1,5 @@
 # sensor.py
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -176,6 +177,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Mijn Liander sensor platform from a config entry."""
+    await asyncio.sleep(0)
     coordinator: LianderDataUpdateCoordinator = hass.data[DOMAIN].get(
         config_entry.entry_id)
     if coordinator is None:

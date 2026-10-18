@@ -53,14 +53,14 @@ class MijnLiander:
             _LOGGER.debug("Authentication successful, JWT token stored.")
 
         except requests.RequestException as e:
-            _LOGGER.error("Error during Mijn Liander authentication: %s", e)
+            _LOGGER.exception("Error during Mijn Liander authentication")
             raise UpdateFailed(f"Authentication failed: {e}") from e
 
     def get_coordinator(self):
         """Return the data update coordinator."""
         return self.coordinator
 
-    async def close(self):
+    def close(self):
         """Close and clean up any resources."""
         _LOGGER.debug("Closing resources for Mijn Liander integration.")
         # Perform any cleanup actions, such as closing open sessions

@@ -135,21 +135,21 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
                     else datetime.now(UTC) + timedelta(hours=1)
                 )
             except jwt.DecodeError as e:
-                _LOGGER.error("Failed to decode JWT token: %s", e)
+                _LOGGER.exception("Failed to decode JWT token")
                 raise UpdateFailed(f"JWT decode error: {e}") from e
 
             _LOGGER.debug("Token refreshed successfully, new expiry at %s", self._token_expiry)
 
-        except (ContentTypeError, KeyError) as e:
-            _LOGGER.error("Invalid JSON response during token renewal: %s", e)
+        except (ContentTypeError, KeyError):
+            _LOGGER.exception("Invalid JSON response during token renewal")
             raise UpdateFailed("Invalid JSON response during token renewal.")
 
         except aiohttp.ClientError as e:
-            _LOGGER.error("Error renewing token: %s", e)
+            _LOGGER.exception("Error renewing token")
             raise UpdateFailed(f"Error renewing token: {e}") from e
 
         except Exception as e:
-            _LOGGER.error("Unexpected error during token renewal: %s", e)
+            _LOGGER.exception("Unexpected error during token renewal")
             raise UpdateFailed(f"Unexpected error renewing token: {e}") from e
 
     async def get_valid_token(self) -> str:
@@ -237,11 +237,11 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Invalid JSON response from Liander API.")
 
         except aiohttp.ClientError as e:
-            _LOGGER.error("Error fetching data from Liander API: %s", e)
+            _LOGGER.exception("Error fetching data from Liander API")
             raise UpdateFailed(f"Error fetching data from Liander API: {e}") from e
 
         except Exception as e:
-            _LOGGER.error("Unexpected error fetching data: %s", e)
+            _LOGGER.exception("Unexpected error fetching data")
             raise UpdateFailed(f"Unexpected error fetching data: {e}") from e
 
 

@@ -2,6 +2,7 @@
 Binary Sensor platform for Mijn Liander.
 """
 # binary_sensor.py
+import asyncio
 import logging
 import uuid
 from collections.abc import Callable
@@ -42,6 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Mijn Liander binary sensor based on a config entry."""
+    await asyncio.sleep(0)
     _LOGGER.debug("Setting up Mijn Liander binary sensor for entry: %s",
                   config_entry.entry_id)
 
