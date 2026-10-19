@@ -55,12 +55,7 @@ jobs:
           python-version: "3.14"
   
       - name: Install test dependencies
-        run: |
-          python -m pip install \
-            --require-hashes \
-            --only-binary=:all: \
-            --no-binary=pyric,mock-open \
-            -r requirements_test.txt
+        run: bash .github/scripts/install-test-dependencies.sh
   
       - name: Run tests
         run: python -m pytest -q
