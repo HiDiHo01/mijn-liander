@@ -29,6 +29,9 @@ jobs:
       - name: Regenerate requirements with hashes
         run: pip-compile requirements_test.in --upgrade --generate-hashes
 
+      - name: Validate compiled requirements
+        run: bash .github/scripts/install-test-dependencies.sh
+
       - name: Commit and push requirements update
         id: update
         run: |
