@@ -75,13 +75,13 @@ This document defines project-specific engineering guidance for the Mijn Liander
 Use the repository's current CI workflows and README as the source of truth for exact commands and dependency versions. The README currently documents:
 
 ```shell
-python -m pip install --require-hashes --only-binary=:all: --no-binary=pyric -r requirements_test.txt
+bash .github/scripts/install-test-dependencies.sh
 python -m pytest -q
 python -m pip install ruff==0.16.10
 ruff check --config ruff.toml custom_components/mijn_liander tests
 ```
 
-- The dependency installation intentionally allows the hash-verified PyRIC source archive because PyRIC has no published wheel; do not remove hash verification or change this exception casually.
+- `.github/scripts/install-test-dependencies.sh` is the single source of truth for installing test dependencies in CI and validating regenerated lock files. It keeps hash verification and binary-only installation enabled, with an explicit source-distribution allowlist for `pyric` and `mock-open`. Update that allowlist only when a dependency demonstrably requires a source distribution, and keep both dependency-update workflows using the shared script.
 - Add focused regression tests for parsing, nullable fields, error mapping, migrations, entity identity, gas-contract behavior, and multiple config entries as applicable.
 - Test negative and boundary cases, not only the happy path.
 - Run HACS validation and Home Assistant `hassfest` when manifest metadata, translations, integration discovery, or packaging changes.
