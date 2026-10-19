@@ -35,11 +35,11 @@ to have the `home-assistant` topic.
 With Python 3.14.2 or newer, install the locked test dependencies and run the tests:
 
 ```shell
-python -m pip install --require-hashes --only-binary=:all: --no-binary=pyric -r requirements_test.txt
+bash .github/scripts/install-test-dependencies.sh
 python -m pytest -q
 ```
 
-PyRIC has no published wheel, so only its hash-verified source archive is allowed.
+The shared installer keeps binary-only installation as the default and explicitly allows hash-verified source distributions for PyRIC and mock-open. The dependency-update workflows run the same installer after compiling the lock file, so an unexpected source-only dependency fails validation before a pull request is created.
 To run the lint check, install Ruff 0.16.10 with `python -m pip install ruff==0.16.10` and run `ruff check --config ruff.toml custom_components/mijn_liander tests`.
 To update the dependency lock, edit `requirements_test.in` and run the `uv pip compile`
 command recorded at the top of `requirements_test.txt`.
