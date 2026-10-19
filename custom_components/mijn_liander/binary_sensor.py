@@ -2,6 +2,7 @@
 Binary Sensor platform for Mijn Liander.
 """
 # binary_sensor.py
+import asyncio
 import logging
 import uuid
 from collections.abc import Callable
@@ -42,6 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Mijn Liander binary sensor based on a config entry."""
+    await asyncio.sleep(0)
     _LOGGER.debug("Setting up Mijn Liander binary sensor for entry: %s",
                   config_entry.entry_id)
 
@@ -114,6 +116,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="permission_to_read_data",
         translation_key="permission_to_read_data",
         icon="mdi:eye-check-outline",
+        icon_inactive="mdi:eye-off-outline",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -125,7 +128,9 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="gprs",
         translation_key="gprs",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:signal",
+        icon_inactive="mdi:signal-off",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -174,6 +179,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_status",
         translation_key="gas_status",
         icon="mdi:check-circle",
+        icon_inactive="mdi:cancel",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
@@ -186,6 +192,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_permission_to_read_data",
         translation_key="gas_permission_to_read_data",
         icon="mdi:eye-check-outline",
+        icon_inactive="mdi:eye-off-outline",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(

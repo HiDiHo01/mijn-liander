@@ -77,6 +77,27 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertTrue(LianderSensor._attr_has_entity_name)
         self.assertTrue(LianderBinarySensor._attr_has_entity_name)
 
+    def test_binary_sensor_device_classes_and_inactive_icons(self) -> None:
+        """Verify binary sensors have expected device classes and inactive icon visual feedback."""
+        from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+
+        gprs_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gprs")
+        self.assertEqual(gprs_desc.device_class, BinarySensorDeviceClass.CONNECTIVITY)
+        self.assertEqual(gprs_desc.icon, "mdi:signal")
+        self.assertEqual(gprs_desc.icon_inactive, "mdi:signal-off")
+
+        gas_status_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_status")
+        self.assertEqual(gas_status_desc.icon, "mdi:check-circle")
+        self.assertEqual(gas_status_desc.icon_inactive, "mdi:cancel")
+
+        perm_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "permission_to_read_data")
+        self.assertEqual(perm_desc.icon, "mdi:eye-check-outline")
+        self.assertEqual(perm_desc.icon_inactive, "mdi:eye-off-outline")
+
+        gas_perm_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_permission_to_read_data")
+        self.assertEqual(gas_perm_desc.icon, "mdi:eye-check-outline")
+        self.assertEqual(gas_perm_desc.icon_inactive, "mdi:eye-off-outline")
+
 
 if __name__ == "__main__":
     unittest.main()

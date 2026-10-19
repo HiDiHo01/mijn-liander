@@ -1,4 +1,5 @@
 # config_flow.py
+import asyncio
 import logging
 from typing import Any
 
@@ -37,9 +38,11 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
     try:
         _LOGGER.debug("Sending login request to %s with data: %s",
                       API_LOGIN_URL, login_data)
-        async with aiohttp.ClientSession() as session, session.post(
-            API_LOGIN_URL, json=login_data, timeout=timeout
-        ) as response:
+        async with (
+            asyncio.timeout(timeout),
+            aiohttp.ClientSession() as session,
+            session.post(API_LOGIN_URL, json=login_data) as response,
+        ):
             response.raise_for_status()
             login_response = await response.json()
             jwt_token = login_response.get("jwt")
@@ -52,8 +55,8 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
             return {"status": "error", "error": "invalid_auth"}
     except aiohttp.ClientResponseError as e:
         return {"status": "error", "error": _map_http_error(e)}
-    except aiohttp.ClientError as e:
-        _LOGGER.error("Network error validating credentials: %s", e)
+    except aiohttp.ClientError:
+        _LOGGER.exception("Network error validating credentials")
         return {"status": "error", "error": "cannot_connect"}
 
 
@@ -137,12 +140,12 @@ class ConfigFlow(config_entries.ConfigFlow):
                     errors["base"] = validation_result.get(
                         "error", "unknown")
 
-            except vol.Invalid as e:
-                _LOGGER.error("Schema validation failed: %s", e)
+            except vol.Invalid:
+                _LOGGER.exception("Schema validation failed")
                 errors["base"] = "invalid_input"
 
-            except Exception as e:
-                _LOGGER.error("Unexpected exception during validation: %s", e)
+            except Exception:
+                _LOGGER.exception("Unexpected exception during validation")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
