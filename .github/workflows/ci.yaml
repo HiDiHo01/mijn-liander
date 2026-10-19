@@ -59,7 +59,7 @@ jobs:
           python -m pip install \
             --require-hashes \
             --only-binary=:all: \
-            --no-binary=pyric \
+            --no-binary=pyric,mock-open \
             -r requirements_test.txt
   
       - name: Run tests
