@@ -116,6 +116,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="permission_to_read_data",
         translation_key="permission_to_read_data",
         icon="mdi:eye-check-outline",
+        icon_inactive="mdi:eye-off-outline",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -191,6 +192,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_permission_to_read_data",
         translation_key="gas_permission_to_read_data",
         icon="mdi:eye-check-outline",
+        icon_inactive="mdi:eye-off-outline",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(

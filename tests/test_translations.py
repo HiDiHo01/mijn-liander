@@ -90,6 +90,14 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(gas_status_desc.icon, "mdi:check-circle")
         self.assertEqual(gas_status_desc.icon_inactive, "mdi:cancel")
 
+        perm_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "permission_to_read_data")
+        self.assertEqual(perm_desc.icon, "mdi:eye-check-outline")
+        self.assertEqual(perm_desc.icon_inactive, "mdi:eye-off-outline")
+
+        gas_perm_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_permission_to_read_data")
+        self.assertEqual(gas_perm_desc.icon, "mdi:eye-check-outline")
+        self.assertEqual(gas_perm_desc.icon_inactive, "mdi:eye-off-outline")
+
 
 if __name__ == "__main__":
     unittest.main()
