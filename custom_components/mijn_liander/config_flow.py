@@ -158,6 +158,8 @@ class ConfigFlow(config_entries.ConfigFlow):
         """Handle re-authentication if the credentials become invalid."""
         errors = {}
 
+        entry = self._get_reauth_entry()
+
         if user_input:
             validation_result = await _validate_input(
                 user_input[CONF_USERNAME],
@@ -167,15 +169,20 @@ class ConfigFlow(config_entries.ConfigFlow):
 
             if validation_result.get("status") == "success":
                 self.hass.config_entries.async_update_entry(
-                    self.context["entry_id"], data=user_input
+                    entry, data=user_input
                 )
                 return self.async_abort(reason="reauth_successful")
             else:
                 errors = {"base": validation_result.get(
                     "error", "unknown")}
 
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA,
+            entry.data if entry else {}
+        )
+
         return self.async_show_form(
             step_id="reauth",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=data_schema,
             errors=errors
         )
