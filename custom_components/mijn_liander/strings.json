@@ -25,8 +25,6 @@
           "timeout": "Timeout"
         },
         "data_description": {
-          "username": "Your Mijn Liander account email address.",
-          "password": "Your Mijn Liander account password.",
           "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       },
@@ -38,8 +36,6 @@
           "timeout": "Timeout"
         },
         "data_description": {
-          "username": "Your Mijn Liander account email address.",
-          "password": "Your Mijn Liander account password.",
           "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       }
