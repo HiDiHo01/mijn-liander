@@ -10,7 +10,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
-from custom_components.mijn_liander.config_flow import _map_http_error, _validate_input
+from custom_components.mijn_liander.config_flow import (
+    ConfigFlow,
+    _map_http_error,
+    _validate_input,
+)
 
 INTEGRATION_PATH = Path(__file__).parents[1] / "custom_components" / "mijn_liander"
 
@@ -67,6 +71,33 @@ class TestConfigFlowErrors(unittest.TestCase):
         for lang, locale in locales.items():
             locale_errors = set(locale["config"]["error"].keys())
             self.assertEqual(source_errors, locale_errors, f"Error mismatch in {lang}")
+
+    def test_reauth_step_prefills_suggested_values(self) -> None:
+        """Re-authentication flow form contains suggested values from existing config entry."""
+        flow = ConfigFlow()
+        flow.hass = MagicMock()
+
+        mock_entry = MagicMock()
+        mock_entry.data = {
+            "username": "existing_user@example.com",
+            "password": "old_password",
+            "timeout": 10,
+        }
+
+        with patch.object(flow, "_get_reauth_entry", return_value=mock_entry):
+            result = asyncio.run(flow.async_step_reauth(None))
+
+        self.assertEqual(result["type"], "form")
+        self.assertEqual(result["step_id"], "reauth")
+
+        schema = result["data_schema"]
+        suggested_values = {
+            k: k.description["suggested_value"]
+            for k in schema.schema
+            if isinstance(k.description, dict) and "suggested_value" in k.description
+        }
+        self.assertEqual(suggested_values.get("username"), "existing_user@example.com")
+        self.assertEqual(suggested_values.get("timeout"), 10)
 
 
 if __name__ == "__main__":
