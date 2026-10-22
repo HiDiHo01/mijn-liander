@@ -9,6 +9,11 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import API_LOGIN_URL, DOMAIN
 
@@ -16,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_PASSWORD): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+    ),
     vol.Optional("timeout", default=5): vol.All(cv.positive_int, vol.Range(min=1, max=30))
 })
 

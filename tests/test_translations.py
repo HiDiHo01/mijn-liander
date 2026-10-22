@@ -98,6 +98,14 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(gas_perm_desc.icon, "mdi:eye-check-outline")
         self.assertEqual(gas_perm_desc.icon_inactive, "mdi:eye-off-outline")
 
+        contract_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "contract_active")
+        self.assertEqual(contract_desc.icon, "mdi:check-circle")
+        self.assertEqual(contract_desc.icon_inactive, "mdi:close-circle")
+
+        gas_contract_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_contract_active")
+        self.assertEqual(gas_contract_desc.icon, "mdi:check-circle")
+        self.assertEqual(gas_contract_desc.icon_inactive, "mdi:close-circle")
+
 
 if __name__ == "__main__":
     unittest.main()

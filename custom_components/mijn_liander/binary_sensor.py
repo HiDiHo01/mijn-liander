@@ -109,7 +109,8 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="contract_active",
         translation_key="contract_active",
-        icon="mdi:check",
+        icon="mdi:check-circle",
+        icon_inactive="mdi:close-circle",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -185,7 +186,8 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="gas_contract_active",
         translation_key="gas_contract_active",
-        icon="mdi:check",
+        icon="mdi:check-circle",
+        icon_inactive="mdi:close-circle",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
