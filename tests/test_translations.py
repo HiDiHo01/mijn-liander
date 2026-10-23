@@ -106,6 +106,22 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(gas_contract_desc.icon, "mdi:check-circle")
         self.assertEqual(gas_contract_desc.icon_inactive, "mdi:close-circle")
 
+        smart_meter_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "smart_meter")
+        self.assertEqual(smart_meter_desc.icon, "mdi:meter-electric")
+        self.assertEqual(smart_meter_desc.icon_inactive, "mdi:meter-electric-outline")
+
+        gas_smart_meter_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_smart_meter")
+        self.assertEqual(gas_smart_meter_desc.icon, "mdi:meter-gas")
+        self.assertEqual(gas_smart_meter_desc.icon_inactive, "mdi:meter-gas-outline")
+
+        backfeeding_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "backfeeding_energy")
+        self.assertEqual(backfeeding_desc.icon, "mdi:transmission-tower-import")
+        self.assertEqual(backfeeding_desc.icon_inactive, "mdi:transmission-tower-off")
+
+        net_metering_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "net_metering")
+        self.assertEqual(net_metering_desc.icon, "mdi:solar-power")
+        self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-off")
+
 
 if __name__ == "__main__":
     unittest.main()

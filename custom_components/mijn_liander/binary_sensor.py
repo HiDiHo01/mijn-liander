@@ -124,6 +124,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="smart_meter",
         translation_key="smart_meter",
         icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -156,6 +157,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="backfeeding_energy",
         translation_key="backfeeding_energy",
         icon="mdi:transmission-tower-import",
+        icon_inactive="mdi:transmission-tower-off",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -174,6 +176,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="net_metering",
         translation_key="net_metering",
         icon="mdi:solar-power",
+        icon_inactive="mdi:solar-power-off",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
@@ -207,6 +210,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_smart_meter",
         translation_key="gas_smart_meter",
         icon="mdi:meter-gas",
+        icon_inactive="mdi:meter-gas-outline",
         service_name=SERVICE_NAME_GAS,
     ),
 ]
