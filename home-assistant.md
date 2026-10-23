@@ -60,15 +60,6 @@ This document defines project-specific engineering guidance for the Mijn Liander
 - When gas-contract status changes, reload or update the relevant platforms safely. Remove only obsolete gas registry entries belonging to the relevant integration/config entry; never delete unrelated electricity entities or another account's entities.
 - Test contract activation, contract removal, and config-entry reloads, including stale registry cases.
 
-### Material Design Icons validation
-
-- Whenever adding, changing, or reviewing an `mdi:` icon, always verify that the name after `mdi:` exactly matches a `name` entry in the [official Material Design Icons catalog](https://raw.githubusercontent.com/Templarian/MaterialDesign/master/meta.json). Apply this to entity descriptions, icon properties, icon translations, and every dynamic state branch, including active, inactive, unknown, and unavailable states where an explicit icon is returned.
-- Never infer an icon name by appending suffixes such as `-off` or `-outline`. For example, do not derive `mdi:solar-power-off` from `mdi:solar-power` for inactive `net_metering`; select a semantically appropriate icon whose exact name has been verified in the catalog.
-- Also verify that the selected icon is available in the MDI version bundled with the minimum supported Home Assistant frontend. Presence in the latest catalog alone does not establish compatibility.
-- When adding or fixing icon behavior, test catalog membership for every returned `mdi:` value as well as the intended state-to-icon mapping. An assertion that merely repeats the implementation's icon string does not prove that the icon exists.
-- Keep ordinary unit tests offline and deterministic: validate against a pinned, catalog-derived fixture or snapshot with its upstream URL and commit/version recorded. Do not handwrite an allowlist from the implementation's expected strings or fetch the live catalog from entity properties or ordinary unit tests.
-- If the catalog cannot be accessed and no verified snapshot is available, report icon validation as unverified; do not claim that a guessed name is valid.
-
 ## Config flow, options, and migrations
 
 - Validate user input and remote authentication responses before creating a config entry.

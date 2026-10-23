@@ -120,7 +120,7 @@ class EntityTranslationTests(unittest.TestCase):
 
         net_metering_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "net_metering")
         self.assertEqual(net_metering_desc.icon, "mdi:solar-power")
-        self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-off")
+        self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-variant-outline")
 
 
 if __name__ == "__main__":
