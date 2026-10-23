@@ -77,6 +77,34 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertTrue(LianderSensor._attr_has_entity_name)
         self.assertTrue(LianderBinarySensor._attr_has_entity_name)
 
+    def test_binary_sensor_icons_exist_in_mdi_catalog(self) -> None:
+        """Validate actual state icons against the pinned upstream catalog."""
+        catalog_path = Path(__file__).parent / "fixtures" / "mdi_catalog.json"
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        icon_names = set(catalog["names"])
+
+        for description in BINARY_SENSOR_DESCRIPTIONS:
+            # Icon selection needs only the description and native binary state.
+            entity = object.__new__(LianderBinarySensor)
+            entity.entity_description = description
+            for state in (True, False, None):
+                with self.subTest(key=description.key, state=state):
+                    entity._attr_is_on = state
+                    selected_icon = entity.icon
+                    expected_icon = (
+                        description.icon_inactive
+                        if not state and description.icon_inactive is not None
+                        else description.icon
+                    )
+                    self.assertEqual(selected_icon, expected_icon)
+                    if selected_icon is not None:
+                        self.assertTrue(selected_icon.startswith("mdi:"))
+                        self.assertIn(
+                            selected_icon.removeprefix("mdi:"),
+                            icon_names,
+                            f"Unknown MDI icon for {description.key}: {selected_icon}",
+                        )
+
     def test_binary_sensor_device_classes_and_inactive_icons(self) -> None:
         """Verify binary sensors have expected device classes and inactive icon visual feedback."""
         from homeassistant.components.binary_sensor import BinarySensorDeviceClass
