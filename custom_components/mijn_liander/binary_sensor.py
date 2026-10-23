@@ -174,6 +174,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="net_metering",
         translation_key="net_metering",
         icon="mdi:solar-power",
+        icon_inactive="mdi:solar-power-variant-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(

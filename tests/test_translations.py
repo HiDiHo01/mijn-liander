@@ -106,6 +106,60 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(gas_contract_desc.icon, "mdi:check-circle")
         self.assertEqual(gas_contract_desc.icon_inactive, "mdi:close-circle")
 
+        net_metering_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "net_metering")
+        self.assertEqual(net_metering_desc.icon, "mdi:solar-power")
+        self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-variant-outline")
+
+    def test_all_entity_icons_are_valid_mdi_icons(self) -> None:
+        """Verify all configured icons and inactive icons belong to a set of valid MDI icon names."""
+        valid_mdi_names = {
+            "battery",
+            "calendar-arrow-right",
+            "cancel",
+            "cash-multiple",
+            "check-circle",
+            "close-circle",
+            "counter",
+            "currency-eur",
+            "eye-check-outline",
+            "eye-off-outline",
+            "flash-outline",
+            "flash-triangle-outline",
+            "gauge",
+            "home",
+            "meter-electric",
+            "meter-electric-outline",
+            "meter-gas",
+            "numeric",
+            "pipe",
+            "power-socket",
+            "signal",
+            "signal-off",
+            "solar-power",
+            "solar-power-variant-outline",
+            "transmission-tower",
+            "transmission-tower-import",
+            "trending-up",
+            "waveform",
+        }
+
+        all_descriptions = [*SENSOR_DESCRIPTIONS, *BINARY_SENSOR_DESCRIPTIONS]
+        for desc in all_descriptions:
+            for attr in ("icon", "icon_inactive"):
+                icon_val = getattr(desc, attr, None)
+                if icon_val:
+                    with self.subTest(key=desc.key, attr=attr, icon=icon_val):
+                        self.assertTrue(
+                            icon_val.startswith("mdi:"),
+                            f"Icon '{icon_val}' does not start with 'mdi:'",
+                        )
+                        name = icon_val.removeprefix("mdi:")
+                        self.assertIn(
+                            name,
+                            valid_mdi_names,
+                            f"Icon '{icon_val}' for {desc.key} ({attr}) is absent from MDI catalog",
+                        )
+
 
 if __name__ == "__main__":
     unittest.main()
