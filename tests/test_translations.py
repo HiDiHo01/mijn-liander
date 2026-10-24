@@ -150,6 +150,34 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(net_metering_desc.icon, "mdi:solar-power")
         self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-variant-outline")
 
+        analog_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "analog")
+        self.assertEqual(analog_desc.icon, "mdi:waveform")
+        self.assertEqual(analog_desc.icon_inactive, "mdi:sine-wave")
+
+        suitable_backfeeding_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "suitable_for_backfeeding")
+        self.assertEqual(suitable_backfeeding_desc.icon, "mdi:transmission-tower")
+        self.assertEqual(suitable_backfeeding_desc.icon_inactive, "mdi:transmission-tower-off")
+
+        suitable_dual_tariff_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "suitable_for_dual_tariff")
+        self.assertEqual(suitable_dual_tariff_desc.icon, "mdi:cash-multiple")
+        self.assertEqual(suitable_dual_tariff_desc.icon_inactive, "mdi:cash-off")
+
+        meter_fault_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "meter_fault_check_allowed")
+        self.assertEqual(meter_fault_desc.icon, "mdi:meter-electric")
+        self.assertEqual(meter_fault_desc.icon_inactive, "mdi:meter-electric-outline")
+
+        smart_request_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "smart_meter_request_allowed")
+        self.assertEqual(smart_request_desc.icon, "mdi:meter-electric")
+        self.assertEqual(smart_request_desc.icon_inactive, "mdi:meter-electric-outline")
+
+        gas_meter_fault_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "gas_meter_fault_check_allowed")
+        self.assertEqual(gas_meter_fault_desc.icon, "mdi:meter-gas")
+        self.assertEqual(gas_meter_fault_desc.icon_inactive, "mdi:meter-gas-outline")
+
+        # Verify every binary sensor has an icon_inactive defined
+        for desc in BINARY_SENSOR_DESCRIPTIONS:
+            self.assertIsNotNone(desc.icon_inactive, f"Missing icon_inactive for binary sensor {desc.key}")
+
 
 if __name__ == "__main__":
     unittest.main()
