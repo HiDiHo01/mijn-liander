@@ -139,18 +139,21 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="analog",
         translation_key="analog",
         icon="mdi:waveform",
+        icon_inactive="mdi:sine-wave",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="suitable_for_backfeeding",
         translation_key="suitable_for_backfeeding",
         icon="mdi:transmission-tower",
+        icon_inactive="mdi:transmission-tower-off",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="suitable_for_dual_tariff",
         translation_key="suitable_for_dual_tariff",
         icon="mdi:cash-multiple",
+        icon_inactive="mdi:cash-off",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -163,13 +166,15 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="meter_fault_check_allowed",
         translation_key="meter_fault_check_allowed",
-        icon="mdi:meter-electric-outline",
+        icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
         key="smart_meter_request_allowed",
         translation_key="smart_meter_request_allowed",
         icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
@@ -204,6 +209,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         key="gas_meter_fault_check_allowed",
         translation_key="gas_meter_fault_check_allowed",
         icon="mdi:meter-gas",
+        icon_inactive="mdi:meter-gas-outline",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
