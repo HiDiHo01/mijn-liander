@@ -28,14 +28,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema({
 })
 
 
-async def _validate_input(username: str, password: str, timeout: int) -> dict[str, str]:
+async def _validate_input(username: str, password: str) -> dict[str, str]:
     """
     Validate the input by attempting to log in with the provided credentials.
 
     Args:
         username (str): The username for login.
         password (str): The password for login.
-        timeout (int): The timeout value for the request.
 
     Returns:
         dict: A dictionary with validation status and any errors.
@@ -46,7 +45,6 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
         _LOGGER.debug("Sending login request to %s with data: %s",
                       API_LOGIN_URL, login_data)
         async with (
-            asyncio.timeout(timeout),
             aiohttp.ClientSession() as session,
             session.post(API_LOGIN_URL, json=login_data) as response,
         ):
@@ -62,7 +60,7 @@ async def _validate_input(username: str, password: str, timeout: int) -> dict[st
             return {"status": "error", "error": "invalid_auth"}
     except aiohttp.ClientResponseError as e:
         return {"status": "error", "error": _map_http_error(e)}
-    except aiohttp.ClientError:
+    except (aiohttp.ClientError, TimeoutError):
         _LOGGER.exception("Network error validating credentials")
         return {"status": "error", "error": "cannot_connect"}
 
@@ -115,7 +113,12 @@ class ConfigFlow(config_entries.ConfigFlow):
 
                 _LOGGER.debug("Validating user input: %s", user_input)
 
-                validation_result = await _validate_input(username, password, timeout)
+                try:
+                    async with asyncio.timeout(timeout):
+                        validation_result = await _validate_input(username, password)
+                except TimeoutError:
+                    _LOGGER.exception("Timeout error validating credentials")
+                    validation_result = {"status": "error", "error": "cannot_connect"}
 
                 if validation_result.get("status") == "success":
                     user_input["jwt_token"] = validation_result.get(
@@ -168,11 +171,16 @@ class ConfigFlow(config_entries.ConfigFlow):
         entry = self._get_reauth_entry()
 
         if user_input:
-            validation_result = await _validate_input(
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                user_input.get("timeout", 5)
-            )
+            timeout = user_input.get("timeout", 5)
+            try:
+                async with asyncio.timeout(timeout):
+                    validation_result = await _validate_input(
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                    )
+            except TimeoutError:
+                _LOGGER.exception("Timeout error validating credentials")
+                validation_result = {"status": "error", "error": "cannot_connect"}
 
             if validation_result.get("status") == "success":
                 self.hass.config_entries.async_update_entry(
