@@ -48,7 +48,7 @@ class TestConfigFlowErrors(unittest.TestCase):
 
         async def run_test():
             with patch("aiohttp.ClientSession", return_value=mock_session_cm):
-                return await _validate_input("user@example.com", "secret", 5)
+                return await _validate_input("user@example.com", "secret")
 
         res = asyncio.run(run_test())
         self.assertEqual(res, {"status": "error", "error": "cannot_connect"})
