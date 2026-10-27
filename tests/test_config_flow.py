@@ -72,6 +72,29 @@ class TestConfigFlowErrors(unittest.TestCase):
             locale_errors = set(locale["config"]["error"].keys())
             self.assertEqual(source_errors, locale_errors, f"Error mismatch in {lang}")
 
+    def test_config_flow_schema_selectors(self) -> None:
+        """Config flow schema uses EMAIL and PASSWORD selectors with autocomplete attributes."""
+        from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+        from homeassistant.helpers.selector import TextSelectorType
+
+        from custom_components.mijn_liander.config_flow import STEP_USER_DATA_SCHEMA
+
+        username_selector = None
+        password_selector = None
+
+        for key, selector in STEP_USER_DATA_SCHEMA.schema.items():
+            if str(key) == CONF_USERNAME:
+                username_selector = selector
+            elif str(key) == CONF_PASSWORD:
+                password_selector = selector
+
+        self.assertIsNotNone(username_selector)
+        self.assertIsNotNone(password_selector)
+        self.assertEqual(username_selector.config["type"], TextSelectorType.EMAIL)
+        self.assertEqual(username_selector.config["autocomplete"], "username")
+        self.assertEqual(password_selector.config["type"], TextSelectorType.PASSWORD)
+        self.assertEqual(password_selector.config["autocomplete"], "current-password")
+
     def test_reauth_step_prefills_suggested_values(self) -> None:
         """Re-authentication flow form contains suggested values from existing config entry."""
         flow = ConfigFlow()
