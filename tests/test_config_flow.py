@@ -9,8 +9,11 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.selector import TextSelector, TextSelectorType
 
 from custom_components.mijn_liander.config_flow import (
+    STEP_USER_DATA_SCHEMA,
     ConfigFlow,
     _map_http_error,
     _validate_input,
@@ -98,6 +101,24 @@ class TestConfigFlowErrors(unittest.TestCase):
         }
         self.assertEqual(suggested_values.get("username"), "existing_user@example.com")
         self.assertEqual(suggested_values.get("timeout"), 10)
+
+    def test_config_flow_schema_selectors(self) -> None:
+        """Schema uses TextSelector with email and password types and autocomplete metadata."""
+        schema_dict = STEP_USER_DATA_SCHEMA.schema
+
+        username_key = next(k for k in schema_dict if k == CONF_USERNAME)
+        password_key = next(k for k in schema_dict if k == CONF_PASSWORD)
+
+        username_selector = schema_dict[username_key]
+        password_selector = schema_dict[password_key]
+
+        self.assertIsInstance(username_selector, TextSelector)
+        self.assertEqual(username_selector.config["type"], TextSelectorType.EMAIL)
+        self.assertEqual(username_selector.config.get("autocomplete"), "username")
+
+        self.assertIsInstance(password_selector, TextSelector)
+        self.assertEqual(password_selector.config["type"], TextSelectorType.PASSWORD)
+        self.assertEqual(password_selector.config.get("autocomplete"), "current-password")
 
 
 if __name__ == "__main__":
