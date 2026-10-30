@@ -7,6 +7,7 @@
     },
     "error": {
       "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw.",
+      "wrong_account": "Log in met het e-mailadres dat al voor dit account is ingesteld. Voeg de integratie opnieuw toe om een ander e-mailadres te gebruiken.",
       "forbidden": "Toegang geweigerd. Controleer uw accountrechten.",
       "not_found": "Kan geen verbinding maken met het Mijn Liander eindpunt.",
       "cannot_connect": "Kan geen verbinding maken met Mijn Liander. Controleer de netwerkverbinding.",

@@ -19,6 +19,12 @@ Then select **Download** in HACS and restart Home Assistant. If the button does 
 
 Gas entities are created only while the account has an active gas contract. If the contract is added or removed later, the integration refreshes its entities when the account data next updates.
 
+You can add multiple Mijn Liander accounts by adding the integration again for each
+email address. Each account has its own data and devices. The same email address
+can only be configured once; capitalization and surrounding whitespace do not
+create a separate account. Re-authentication renews credentials for the existing
+account; add another integration entry to use a different email address.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
