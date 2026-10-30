@@ -22,7 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): vol.All(cv.string, vol.Strip, vol.Email()),
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL)
+        ),
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
@@ -30,6 +32,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             cv.positive_int, vol.Range(min=1, max=30)
         ),
     }
+)
+
+# Keep UI selector metadata while retaining the email validation used by both flows.
+_LOGIN_DATA_SCHEMA = STEP_USER_DATA_SCHEMA.extend(
+    {vol.Required(CONF_USERNAME): vol.All(cv.string, vol.Strip, vol.Email())}
 )
 
 
@@ -155,7 +162,7 @@ class ConfigFlow(config_entries.ConfigFlow):
 
         if user_input is not None:
             try:
-                validated_data: _LoginData = STEP_USER_DATA_SCHEMA(user_input)
+                validated_data: _LoginData = _LOGIN_DATA_SCHEMA(user_input)
             except vol.Invalid:
                 errors["base"] = "invalid_input"
             else:
@@ -197,7 +204,7 @@ class ConfigFlow(config_entries.ConfigFlow):
 
         if user_input is not None:
             try:
-                validated_data: _LoginData = STEP_USER_DATA_SCHEMA(user_input)
+                validated_data: _LoginData = _LOGIN_DATA_SCHEMA(user_input)
             except vol.Invalid:
                 errors["base"] = "invalid_input"
             else:
