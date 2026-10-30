@@ -9,8 +9,10 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+import voluptuous as vol
 
 from custom_components.mijn_liander.config_flow import (
+    STEP_USER_DATA_SCHEMA,
     ConfigFlow,
     _map_http_error,
     _validate_input,
@@ -74,6 +76,32 @@ class TestConfigFlowErrors(unittest.TestCase):
         for lang, locale in locales.items():
             locale_errors = set(locale["config"]["error"].keys())
             self.assertEqual(source_errors, locale_errors, f"Error mismatch in {lang}")
+
+    def test_schema_username_selector_type_email(self) -> None:
+        """CONF_USERNAME schema field uses TextSelector with TextSelectorType.EMAIL."""
+        from homeassistant.const import CONF_USERNAME
+        from homeassistant.helpers.selector import TextSelector, TextSelectorType
+
+        username_selector = None
+        for key, val in STEP_USER_DATA_SCHEMA.schema.items():
+            if getattr(key, "schema", key) == CONF_USERNAME:
+                username_selector = val
+                break
+
+        self.assertIsNotNone(username_selector)
+        self.assertIsInstance(username_selector, TextSelector)
+        self.assertEqual(username_selector.config.get("type"), TextSelectorType.EMAIL)
+
+    def test_schema_username_rejects_non_strings(self) -> None:
+        """Reject non-string usernames in the UI schema before authentication."""
+        for invalid_username in (42, None, [], {}, True):
+            with (
+                self.subTest(username=invalid_username),
+                self.assertRaises(vol.Invalid),
+            ):
+                STEP_USER_DATA_SCHEMA(
+                    {"username": invalid_username, "password": "test-password"}
+                )
 
     def test_reauth_step_prefills_suggested_values(self) -> None:
         """Re-authentication flow form contains suggested values from existing config entry."""
