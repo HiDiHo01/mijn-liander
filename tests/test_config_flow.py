@@ -46,7 +46,8 @@ class TestConfigFlowErrors(unittest.TestCase):
         mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_cm.__aexit__ = AsyncMock(return_value=None)
 
-        async def run_test():
+        async def run_test() -> dict[str, str]:
+            """Validate synthetic credentials using the mocked HTTP session."""
             with patch("aiohttp.ClientSession", return_value=mock_session_cm):
                 return await _validate_input("user@example.com", "secret")
 
@@ -57,7 +58,9 @@ class TestConfigFlowErrors(unittest.TestCase):
         """Every config error key in source strings exists in locales."""
         source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
-            lang: json.loads((INTEGRATION_PATH / "translations" / f"{lang}.json").read_text())
+            lang: json.loads(
+                (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
+            )
             for lang in ("en", "nl")
         }
 
@@ -88,7 +91,7 @@ class TestConfigFlowErrors(unittest.TestCase):
             result = asyncio.run(flow.async_step_reauth(None))
 
         self.assertEqual(result["type"], "form")
-        self.assertEqual(result["step_id"], "reauth")
+        self.assertEqual(result["step_id"], "reauth_confirm")
 
         schema = result["data_schema"]
         suggested_values = {

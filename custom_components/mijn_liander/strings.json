@@ -29,7 +29,7 @@
           "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "title": "Re-authenticate with Mijn Liander",
         "data": {
           "username": "Email",

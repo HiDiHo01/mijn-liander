@@ -183,6 +183,12 @@ class ConfigFlow(config_entries.ConfigFlow):
         )
 
     async def async_step_reauth(
+        self, entry_data: dict[str, object] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Initialize reauthentication without treating stored data as form input."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, object] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Renew credentials for the same account, preserving existing identities."""
@@ -218,7 +224,7 @@ class ConfigFlow(config_entries.ConfigFlow):
             STEP_USER_DATA_SCHEMA, entry.data
         )
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
         )
