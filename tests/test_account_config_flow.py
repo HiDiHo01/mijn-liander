@@ -215,6 +215,25 @@ async def test_login_exceptions_do_not_create_accounts(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
+async def test_reauth_initializes_with_stored_entry_data(
+    hass: HomeAssistant, authentication: AsyncMock
+) -> None:
+    """Show an error-free confirmation form when Home Assistant supplies stored tokens."""
+    existing_entry = _add_account(hass, "first@example.com", "first@example.com")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id},
+        data=dict(existing_entry.data),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+    assert existing_entry.data["jwt_token"] == "old-test-token"
+    authentication.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     "legacy_unique_id", ["First@Example.com", "legacy-account-id", None]
 )
@@ -229,10 +248,13 @@ async def test_reauth_preserves_account_identity(
     with patch.object(
         hass.config_entries, "async_reload", return_value=True
     ) as reload_mock:
-        result = await hass.config_entries.flow.async_init(
+        initialized_flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id},
-            data=_credentials(" FIRST@example.com "),
+            data=dict(existing_entry.data),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            initialized_flow["flow_id"], _credentials(" FIRST@example.com ")
         )
         await hass.async_block_till_done()
 
@@ -261,10 +283,13 @@ async def test_reauth_cannot_switch_accounts(
     with patch.object(
         hass.config_entries, "async_reload", return_value=True
     ) as reload_mock:
-        result = await hass.config_entries.flow.async_init(
+        initialized_flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id},
-            data=_credentials(different_email),
+            data=dict(existing_entry.data),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            initialized_flow["flow_id"], _credentials(different_email)
         )
 
     assert result["type"] is FlowResultType.FORM
