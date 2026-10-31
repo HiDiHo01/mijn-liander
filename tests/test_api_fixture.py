@@ -168,6 +168,42 @@ def test_malformed_connection_sibling_does_not_make_entities_unknown(
     assert get_mapping_list(siblings) is None
 
 
+@pytest.mark.parametrize("kind", ["elektra", "gas"])
+@pytest.mark.parametrize("malformed", [None, "invalid", 42, []])
+def test_later_malformed_meters_do_not_hide_the_selected_meter(
+    api_data: list[dict[str, object]], kind: str, malformed: object
+) -> None:
+    """Retain first-meter values and flags without publishing a partial meter count."""
+    connection = _connection(api_data, kind)
+    connection["meters"].append(malformed)
+    prefix = "gas_" if kind == "gas" else ""
+
+    assert _entity(api_data, f"{prefix}meter_number").state == (
+        "TEST-GAS-001" if kind == "gas" else "TEST-ELECTRIC-001"
+    )
+    assert _entity(api_data, f"{prefix}number_of_registers").state == (
+        1 if kind == "gas" else 4
+    )
+    assert _entity(api_data, f"{prefix}smart_meter", binary=True).is_on is True
+    assert _entity(api_data, f"{prefix}number_of_meters").native_value is None
+    if kind == "elektra":
+        assert _entity(api_data, "number_of_phases").state == "3"
+        assert _entity(api_data, "gprs", binary=True).is_on is False
+
+
+@pytest.mark.parametrize("kind", ["elektra", "gas"])
+def test_invalid_first_meter_is_not_replaced_by_a_later_meter(
+    api_data: list[dict[str, object]], kind: str
+) -> None:
+    """Keep the established first-meter selection when its record is malformed."""
+    connection = _connection(api_data, kind)
+    connection["meters"].insert(0, None)
+    prefix = "gas_" if kind == "gas" else ""
+
+    assert _entity(api_data, f"{prefix}meter_number").state is None
+    assert _entity(api_data, f"{prefix}smart_meter", binary=True).is_on is None
+
+
 @pytest.mark.parametrize("sensor_key", BINARY_VALUES)
 def test_initial_binary_states_are_not_truthiness_defaults(
     api_data: list[dict[str, object]], sensor_key: str

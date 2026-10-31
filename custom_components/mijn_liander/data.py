@@ -33,6 +33,8 @@ def get_connection(data: object, service_name: str | None) -> dict[str, object] 
 
 
 def get_first_meter(connection: dict[str, object]) -> dict[str, object] | None:
-    """Return the first meter only when the meter list has a valid shape."""
-    meters = get_mapping_list(connection.get("meters"))
-    return meters[0] if meters else None
+    """Validate the selected first meter independently of later sibling records."""
+    meters = connection.get("meters")
+    if not isinstance(meters, list) or not meters or not isinstance(meters[0], dict):
+        return None
+    return meters[0]
