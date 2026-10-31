@@ -83,7 +83,7 @@ def _migrate_entity_preserving_id(
     entry: entity_registry.RegistryEntry,
     new_unique_id: str,
 ) -> bool:
-    """Update the unique ID or replace an owned duplicate, keeping the legacy ID."""
+    """Update the legacy entry in place, removing only a verified owned duplicate."""
     existing_entity_id = registry.async_get_entity_id(
         entry.domain,
         entry.platform,
@@ -101,12 +101,7 @@ def _migrate_entity_preserving_id(
             )
             return False
 
-        registry.async_remove(entry.entity_id)
-        registry.async_update_entity(
-            existing_entity_id,
-            new_entity_id=entry.entity_id,
-        )
-        return True
+        registry.async_remove(existing_entity_id)
 
     registry.async_update_entity(
         entry.entity_id,

@@ -5,6 +5,11 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.migration import (
@@ -617,3 +622,78 @@ def test_reject_missing_or_foreign_duplicate(duplicate_missing: bool) -> None:
     assert registry.entities == {"sensor.legacy": legacy, "sensor.current": duplicate}
     assert legacy.unique_id == "account.address"
     assert duplicate.unique_id == "account_address"
+
+
+@pytest.mark.parametrize(
+    ("domain", "legacy_key", "current_key"),
+    [
+        ("sensor", "address", "address"),
+        ("binary_sensor", "slimmeMeter", "smart_meter"),
+    ],
+)
+async def test_duplicate_migration_preserves_registry_metadata(
+    hass: HomeAssistant,
+    domain: str,
+    legacy_key: str,
+    current_key: str,
+) -> None:
+    """Retain legacy registry identity, settings, and device across repeated runs."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
+    config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    devices = dr.async_get(hass)
+    device = devices.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+    )
+    legacy = registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        f"account.{legacy_key}",
+        config_entry=config_entry,
+        suggested_object_id="legacy",
+        device_id=device.id,
+    )
+    legacy = registry.async_update_entity(
+        legacy.entity_id,
+        name="My meter",
+        icon="mdi:flash",
+        disabled_by=er.RegistryEntryDisabler.USER,
+        hidden_by=er.RegistryEntryHider.USER,
+        labels={"meter"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    registry.async_update_entity_options(
+        legacy.entity_id, DOMAIN, {"custom_setting": "legacy"}
+    )
+    legacy = registry.async_get(legacy.entity_id)
+    assert legacy is not None
+    duplicate = registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        f"account_{current_key}",
+        config_entry=config_entry,
+        suggested_object_id="duplicate",
+    )
+    registry.async_update_entity(
+        duplicate.entity_id, name="Duplicate meter", icon="mdi:home"
+    )
+    registry.async_update_entity_options(
+        duplicate.entity_id, DOMAIN, {"custom_setting": "duplicate"}
+    )
+
+    for _ in range(2):
+        _migrate_entity_unique_ids(registry, config_entry)
+        retained = registry.async_get(legacy.entity_id)
+        assert retained is not None
+        assert retained.unique_id == f"account_{current_key}"
+        for attribute in (
+            "id", "entity_id", "name", "icon", "disabled_by", "hidden_by",
+            "labels", "entity_category", "options", "device_id", "config_entry_id",
+        ):
+            assert getattr(retained, attribute) == getattr(legacy, attribute)
+        assert devices.async_get(retained.device_id) == device
+        assert registry.async_get(duplicate.entity_id) is None
+        assert registry.async_get_entity_id(
+            domain, DOMAIN, f"account_{current_key}"
+        ) == legacy.entity_id
