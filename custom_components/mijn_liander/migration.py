@@ -39,10 +39,14 @@ def _process_single_entity_migration(
     if entry.platform != DOMAIN:
         return False
 
-    if (
-        entry.domain == "sensor"
-        and entry.unique_id in obsolete_sensor_unique_ids
-    ):
+    if entry.domain == "binary_sensor" and entry.unique_id in {
+        f"{dotted_prefix}analog",
+        f"{underscored_prefix}analog",
+    }:
+        registry.async_remove(entry.entity_id)
+        return True
+
+    if entry.domain == "sensor" and entry.unique_id in obsolete_sensor_unique_ids:
         registry.async_remove(entry.entity_id)
         return True
 
@@ -50,12 +54,11 @@ def _process_single_entity_migration(
         return False
 
     if entry.unique_id.startswith(dotted_prefix):
-        legacy_key = entry.unique_id[len(dotted_prefix):]
-    elif (
-        entry.domain == "binary_sensor"
-        and entry.unique_id.startswith(underscored_prefix)
+        legacy_key = entry.unique_id[len(dotted_prefix) :]
+    elif entry.domain == "binary_sensor" and entry.unique_id.startswith(
+        underscored_prefix
     ):
-        legacy_key = entry.unique_id[len(underscored_prefix):]
+        legacy_key = entry.unique_id[len(underscored_prefix) :]
         if legacy_key not in LEGACY_BINARY_SENSOR_KEYS:
             return False
     else:
@@ -67,6 +70,16 @@ def _process_single_entity_migration(
         else legacy_key
     )
     new_unique_id = f"{account_id}_{current_key}"
+    return _migrate_entity_preserving_id(registry, config_entry, entry, new_unique_id)
+
+
+def _migrate_entity_preserving_id(
+    registry: entity_registry.EntityRegistry,
+    config_entry: ConfigEntry,
+    entry: entity_registry.RegistryEntry,
+    new_unique_id: str,
+) -> bool:
+    """Retain an owned current entry, or update the legacy unique ID in place."""
     existing_entity_id = registry.async_get_entity_id(
         entry.domain,
         entry.platform,
@@ -74,7 +87,7 @@ def _process_single_entity_migration(
     )
 
     if existing_entity_id is not None:
-        existing = registry.entities.get_entry(existing_entity_id)
+        existing = registry.async_get(existing_entity_id)
         if existing is None or existing.config_entry_id != config_entry.entry_id:
             _LOGGER.error(
                 "Cannot migrate legacy Mijn Liander entity %s: "
@@ -85,10 +98,6 @@ def _process_single_entity_migration(
             return False
 
         registry.async_remove(entry.entity_id)
-        registry.async_update_entity(
-            existing_entity_id,
-            new_entity_id=entry.entity_id,
-        )
         return True
 
     registry.async_update_entity(
@@ -102,7 +111,7 @@ def _migrate_entity_unique_ids(
     registry: entity_registry.EntityRegistry,
     config_entry: ConfigEntry,
 ) -> None:
-    """Keep the legacy entity IDs while using the current unique ID format."""
+    """Use current unique IDs, retaining current entries when duplicates exist."""
     account_id = config_entry.unique_id
     dotted_prefix = f"{account_id}."
     underscored_prefix = f"{account_id}_"
@@ -164,8 +173,7 @@ def _migrate_electricity_device(
             device.model == SERVICE_NAME_ELEKTRA
             and current_identifier not in device.identifiers
             and any(
-                identifier[:2] == legacy_identifier_prefix
-                and len(identifier) > 2
+                identifier[:2] == legacy_identifier_prefix and len(identifier) > 2
                 for identifier in device.identifiers
             )
             and device.config_entry_id == config_entry.entry_id
@@ -200,8 +208,7 @@ def _migrate_electricity_device(
         ]
 
         if any(
-            entry.config_entry_id != config_entry.entry_id
-            or entry.platform != DOMAIN
+            entry.config_entry_id != config_entry.entry_id or entry.platform != DOMAIN
             for entry in current_entities
         ):
             _LOGGER.warning(
@@ -226,6 +233,36 @@ def _migrate_electricity_device(
     )
 
 
+def _is_owned_gas_entity(
+    entry: entity_registry.RegistryEntry,
+    config_entry: ConfigEntry,
+    gas_device_id: str | None,
+    gas_prefixes: tuple[str, ...],
+) -> bool:
+    """Recognize owned gas entries by their device or established unique-ID prefix."""
+    if entry.platform != DOMAIN or entry.config_entry_id != config_entry.entry_id:
+        return False
+    return (
+        gas_device_id is not None and entry.device_id == gas_device_id
+    ) or entry.unique_id.startswith(gas_prefixes)
+
+
+def _remove_empty_owned_gas_device(
+    device_reg: device_registry.DeviceRegistry,
+    entity_reg: entity_registry.EntityRegistry,
+    gas_device: device_registry.DeviceEntry | None,
+    config_entry: ConfigEntry,
+) -> None:
+    """Remove only an owned gas device with no remaining entities from any entry."""
+    if gas_device is None or gas_device.config_entry_id != config_entry.entry_id:
+        return
+    if gas_device.config_entries != {config_entry.entry_id}:
+        return
+    if any(entry.device_id == gas_device.id for entry in entity_reg.entities.values()):
+        return
+    device_reg.async_remove_device(gas_device.id)
+
+
 def remove_inactive_gas_registry_entries(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -241,10 +278,7 @@ def remove_inactive_gas_registry_entries(
             device_reg,
             config_entry.entry_id,
         )
-        if (
-            gas_identifier in device.identifiers
-            and device.model == SERVICE_NAME_GAS
-        )
+        if (gas_identifier in device.identifiers and device.model == SERVICE_NAME_GAS)
     ]
 
     if len(gas_devices) > 1:
@@ -255,19 +289,18 @@ def remove_inactive_gas_registry_entries(
         )
         return
 
-    if not gas_devices:
-        return
-
-    gas_device = gas_devices[0]
+    gas_device = gas_devices[0] if gas_devices else None
+    gas_device_id = gas_device.id if gas_device is not None else None
+    gas_prefixes = (
+        (f"{config_entry.unique_id}.gas_", f"{config_entry.unique_id}_gas_")
+        if config_entry.unique_id is not None
+        else ()
+    )
 
     gas_entities = [
         entry
         for entry in entity_reg.entities.values()
-        if (
-            entry.device_id == gas_device.id
-            and entry.platform == DOMAIN
-            and entry.config_entry_id == config_entry.entry_id
-        )
+        if _is_owned_gas_entity(entry, config_entry, gas_device_id, gas_prefixes)
     ]
 
     for entry in gas_entities:
@@ -275,16 +308,7 @@ def remove_inactive_gas_registry_entries(
 
     removed_entities = len(gas_entities)
 
-    has_remaining_entities = any(
-        entry.device_id == gas_device.id
-        for entry in entity_reg.entities.values()
-    )
-
-    if (
-        not has_remaining_entities
-        and gas_device.config_entry_id == config_entry.entry_id
-    ):
-        device_reg.async_remove_device(gas_device.id)
+    _remove_empty_owned_gas_device(device_reg, entity_reg, gas_device, config_entry)
 
     if removed_entities:
         _LOGGER.info(
