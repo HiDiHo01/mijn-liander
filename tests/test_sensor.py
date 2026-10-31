@@ -1,11 +1,17 @@
 """Verify Mijn Liander sensor values and installation-icon behavior."""
 
 import json
+import logging
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from homeassistant.components.sensor import async_rounded_state
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import PlatformData
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS, LianderSensor
@@ -97,6 +103,8 @@ def test_numeric_api_values_are_floats(
         "unknown",
         "8,1 kW",
         "1.234,56",
+        "1_0",
+        "1_0,2",
         "NaN",
         "Infinity",
         float("nan"),
@@ -135,6 +143,107 @@ def test_numeric_conversion_preserves_text_fields(
     sensor = _make_connection_sensor(sensor_key, connection_type, data_key, raw_value)
 
     assert sensor.native_value == raw_value
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_precision"),
+    [
+        ("8,1", 1),
+        ("8,0", 1),
+        ("8,125", 1),
+        (" 8,1 ", 1),
+        ("8", 0),
+        (8, 0),
+        ("8.1", 0),
+        (8.1, 0),
+        (None, 0),
+        ("unknown", 0),
+        ("8,1 kW", 1),
+        (["8,1"], 0),
+    ],
+)
+def test_maximum_power_precision_uses_raw_decimal_comma(
+    raw_value: object, expected_precision: int
+) -> None:
+    """Suggest one displayed decimal only when the raw power string has a comma."""
+    sensor = _make_connection_sensor(
+        "maximum_power", "elektra", "maximaalVermogen", raw_value
+    )
+
+    assert sensor.suggested_display_precision == expected_precision
+
+
+def test_maximum_power_precision_is_per_entity() -> None:
+    """Keep shared descriptions and other accounts' precision unchanged."""
+    decimal_sensor = _make_connection_sensor(
+        "maximum_power", "elektra", "maximaalVermogen", "8,125"
+    )
+    integer_sensor = _make_connection_sensor(
+        "maximum_power", "elektra", "maximaalVermogen", "8"
+    )
+    costs_sensor = _make_connection_sensor(
+        "network_costs", "elektra", "netwerkkosten", "8,1"
+    )
+
+    assert decimal_sensor.suggested_display_precision == 1
+    assert decimal_sensor.native_value == pytest.approx(8.125)
+    assert integer_sensor.suggested_display_precision == 0
+    assert integer_sensor.entity_description.suggested_display_precision == 0
+    assert costs_sensor.suggested_display_precision is None
+
+
+@pytest.mark.parametrize("user_precision", [None, 3])
+async def test_maximum_power_precision_updates_preserve_user_preference(
+    hass: HomeAssistant, user_precision: int | None
+) -> None:
+    """Refresh the stored display default while preserving explicit user precision."""
+    logger = logging.getLogger(__name__)
+    coordinator = DataUpdateCoordinator(hass, logger, name=DOMAIN, config_entry=None)
+    initial_sensor = _make_connection_sensor(
+        "maximum_power", "elektra", "maximaalVermogen", "8,1"
+    )
+    coordinator.async_set_updated_data(initial_sensor.coordinator.data)
+    sensor = LianderSensor(
+        coordinator, initial_sensor.entity_description, initial_sensor.entry
+    )
+    registry = er.async_get(hass)
+    registry_entry = registry.async_get_or_create(
+        "sensor", "sensor", sensor.unique_id, suggested_object_id="maximum_power"
+    )
+    sensor_options = {"suggested_display_precision": 0}
+    if user_precision is not None:
+        sensor_options["display_precision"] = user_precision
+    registry.async_update_entity_options(
+        registry_entry.entity_id, "sensor", sensor_options
+    )
+    component = EntityComponent(logger, "sensor", hass)
+    await component.async_add_entities([sensor])
+    await hass.async_block_till_done()
+
+    for raw_value, expected_precision, expected_value in (
+        ("8,1", 1, 8.1),
+        ("8", 0, 8.0),
+        ("8,125", 1, 8.125),
+    ):
+        coordinator.async_set_updated_data(
+            [{"aansluitingen": {"elektra": [{"maximaalVermogen": raw_value}]}}]
+        )
+        await hass.async_block_till_done()
+        updated_entry = registry.async_get(registry_entry.entity_id)
+        assert updated_entry is not None
+        updated_options = updated_entry.options["sensor"]
+        assert updated_options["suggested_display_precision"] == expected_precision
+        assert updated_options.get("display_precision") == user_precision
+        assert sensor.native_value == pytest.approx(expected_value)
+        state = hass.states.get(registry_entry.entity_id)
+        assert state is not None
+        assert float(state.state) == pytest.approx(expected_value)
+        display_precision = (
+            expected_precision if user_precision is None else user_precision
+        )
+        assert async_rounded_state(hass, registry_entry.entity_id, state) == (
+            f"{expected_value:.{display_precision}f}"
+        )
 
 
 @pytest.mark.parametrize(

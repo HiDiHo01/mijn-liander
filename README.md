@@ -36,7 +36,10 @@ default icon. This visual distinction applies to these two installation sensors.
 
 Maximum power and network costs accept decimal commas from Mijn Liander, such as
 `8,1`, and expose numeric values to Home Assistant. Missing or invalid measurements
-appear as unknown.
+appear as unknown. Maximum power defaults to one displayed decimal when its raw
+API value contains a comma, and zero decimals otherwise. This display default
+follows data updates and respects a display precision set by the user; it does not
+round the underlying measurement.
 
 ## Manual installation
 
