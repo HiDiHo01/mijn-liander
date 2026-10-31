@@ -42,6 +42,7 @@ class FakeEntity:
     platform: str
     config_entry_id: str
     device_id: str
+    unique_id: str = ""
 
 
 @dataclass
@@ -87,6 +88,38 @@ class FakeDeviceRegistry:
 
 class TestGasEntities:
     """Verify gas contract detection and registry cleanup."""
+
+    def test_gas_cleanup_preserves_an_empty_device_shared_with_another_entry(
+        self,
+    ) -> None:
+        """Do not remove another config entry's device association without entities."""
+        entry = SimpleNamespace(entry_id="entry-id", unique_id="account")
+        device = FakeDevice(
+            id="shared-gas",
+            identifiers={(DOMAIN, f"entry-id_{SERVICE_NAME_GAS}")},
+            model=SERVICE_NAME_GAS,
+            config_entries={"entry-id", "other-entry"},
+            config_entry_id="entry-id",
+        )
+        devices = FakeDeviceRegistry(device)
+        entities = FakeEntityRegistry()
+        with (
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_get",
+                return_value=devices,
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.device_registry.async_entries_for_config_entry",
+                return_value=[device],
+            ),
+            patch(
+                "custom_components.mijn_liander.migration.entity_registry.async_get",
+                return_value=entities,
+            ),
+        ):
+            remove_inactive_gas_registry_entries(SimpleNamespace(), entry)
+
+        assert devices.devices == {device.id: device}
 
     def test_only_active_gas_contract_counts_as_available(self) -> None:
         """Missing, malformed, or inactive gas contracts do not qualify."""
@@ -159,11 +192,10 @@ class TestGasEntities:
         )
 
         assert len(sensors) == 21
-        assert len(binary_sensors) == 12
+        assert len(binary_sensors) == 11
 
         assert all(
-            description.service_name != SERVICE_NAME_GAS
-            for description in sensors
+            description.service_name != SERVICE_NAME_GAS for description in sensors
         )
         assert all(
             description.service_name != SERVICE_NAME_GAS
@@ -184,17 +216,14 @@ class TestGasEntities:
         assert len(sensors) == len(SENSOR_DESCRIPTIONS)
         assert len(binary_sensors) == len(BINARY_SENSOR_DESCRIPTIONS)
 
-        assert sum(
-            item.service_name == SERVICE_NAME_GAS for item in sensors
-        ) == 9
-        assert sum(
-            item.service_name == SERVICE_NAME_GAS
-            for item in binary_sensors
-        ) == 5
+        assert sum(item.service_name == SERVICE_NAME_GAS for item in sensors) == 9
+        assert (
+            sum(item.service_name == SERVICE_NAME_GAS for item in binary_sensors) == 5
+        )
 
     def test_remove_gas_registry_entries_when_contract_is_absent(self) -> None:
         """Remove gas entities and their now-unused dedicated device."""
-        entry = SimpleNamespace(entry_id="entry-id")
+        entry = SimpleNamespace(entry_id="entry-id", unique_id="account")
 
         device = FakeDevice(
             id="gas-device",
@@ -254,7 +283,7 @@ class TestGasEntities:
         self,
     ) -> None:
         """Keep a gas device that still contains another integration entity."""
-        entry = SimpleNamespace(entry_id="entry-id")
+        entry = SimpleNamespace(entry_id="entry-id", unique_id="account")
 
         device = FakeDevice(
             id="gas-device",
@@ -310,7 +339,7 @@ class TestGasEntities:
         self,
     ) -> None:
         """Keep a gas device whose owning config entry is different."""
-        entry = SimpleNamespace(entry_id="entry-id")
+        entry = SimpleNamespace(entry_id="entry-id", unique_id="account")
 
         device = FakeDevice(
             id="gas-device",
@@ -355,7 +384,7 @@ class TestGasEntities:
 
     def test_gas_cleanup_preserves_multiple_gas_devices(self) -> None:
         """Leave multiple gas devices untouched to avoid ambiguous cleanup."""
-        entry = SimpleNamespace(entry_id="entry-id")
+        entry = SimpleNamespace(entry_id="entry-id", unique_id="account")
 
         first_device = FakeDevice(
             id="gas-device-1",

@@ -141,13 +141,6 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
-        key="analog",
-        translation_key="analog",
-        icon="mdi:waveform",
-        icon_inactive="mdi:sine-wave",
-        service_name="Elektra"
-    ),
-    LianderBinaryEntityDescription(
         key="suitable_for_backfeeding",
         translation_key="suitable_for_backfeeding",
         icon="mdi:transmission-tower",
@@ -313,7 +306,6 @@ class LianderBinarySensor(
         meter_fields = {
             "smart_meter": "slimmeMeter",
             "gprs": "gprs",
-            "analog": "analoog",
             "suitable_for_backfeeding": "geschiktVoorTerugleveren",
             "suitable_for_dual_tariff": "geschiktVoorDubbeltarief",
             "net_metering": "salderingsregeling",

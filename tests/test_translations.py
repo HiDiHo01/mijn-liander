@@ -150,9 +150,7 @@ class EntityTranslationTests(unittest.TestCase):
         self.assertEqual(net_metering_desc.icon, "mdi:solar-power")
         self.assertEqual(net_metering_desc.icon_inactive, "mdi:solar-power-variant-outline")
 
-        analog_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "analog")
-        self.assertEqual(analog_desc.icon, "mdi:waveform")
-        self.assertEqual(analog_desc.icon_inactive, "mdi:sine-wave")
+        self.assertNotIn("analog", {d.key for d in BINARY_SENSOR_DESCRIPTIONS})
 
         suitable_backfeeding_desc = next(d for d in BINARY_SENSOR_DESCRIPTIONS if d.key == "suitable_for_backfeeding")
         self.assertEqual(suitable_backfeeding_desc.icon, "mdi:transmission-tower")
