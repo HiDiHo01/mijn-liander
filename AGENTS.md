@@ -44,7 +44,6 @@ These instructions apply to the entire repository. More specific `AGENTS.md` fil
 - Keep entity unique IDs stable and device identifiers and `via_device` references valid. Do not create orphaned devices or entities.
 - Create gas-related entities only when the account has an active gas contract; handle contract changes and stale registry entries safely.
 - Handle missing, `None`, malformed, and unexpected API values without making unrelated entities unavailable.
-- For Mijn Liander credentials entered on the Home Assistant origin, keep email/password selectors and request `autocomplete="off"` for both fields. Do not use the origin-login hints `username` or `current-password` for these external-service credentials. Browsers and password managers can override this request; do not describe it as credential isolation.
 - Keep manifest metadata, translations, entity descriptions, diagnostics, and documentation aligned with implementation.
 
 ## Pull requests and review comments
@@ -54,14 +53,6 @@ These instructions apply to the entire repository. More specific `AGENTS.md` fil
 - After making changes to a pull request, trigger or request a fresh review when the repository's available workflow supports it. Do not claim a review was triggered unless confirmed.
 - Recheck comments after revisions and resolve a thread only after its concern has been addressed.
 - Keep pull requests focused and describe behavior changes, tests, and any remaining limitations.
-
-### When GitHub reports `rebaseable: false`
-
-- Check `rebaseable` separately from `mergeable`: `mergeable: true` does not prove that GitHub can rebase the branch. Fetch the latest pull-request head and target branch before diagnosing the conflict.
-- Preserve the current head in a backup branch before rewriting history. Resolve conflicts by rebasing onto the current target branch, or rebuild the reviewed changes as linear commits on that target when merge history prevents rebasing. Merging the target into the pull-request branch alone is not sufficient evidence that rebasing works.
-- Inspect the resulting diff to preserve the reviewed changes and unrelated updates on the target branch. For a history-only rewrite with an unchanged target, verify that the new commit's file tree matches the previously tested tree exactly.
-- Update the branch with `git push --force-with-lease` or an API update guarded by the expected previous head SHA. If the head changed concurrently, fetch and reconcile those changes before retrying.
-- Run the applicable tests and CI checks and request a fresh review through the configured tooling. Before reporting the problem as resolved, fetch the pull request again and verify `rebaseable: true` for the exact final head SHA; report this separately from ordinary mergeability.
 
 ## Verification
 

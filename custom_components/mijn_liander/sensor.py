@@ -1,5 +1,4 @@
-"""Expose Mijn Liander account, connection, and installation sensors."""
-
+# sensor.py
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -118,14 +117,12 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="generation_installations",
         translation_key="generation_installations",
-        icon="mdi:solar-power-variant",
-        icon_inactive="mdi:solar-power-variant-outline",
+        icon="mdi:solar-power",
     ),
     LianderSensorEntityDescription(
         key="storage_installations",
         translation_key="storage_installations",
         icon="mdi:battery",
-        icon_inactive="mdi:battery-outline",
     ),
     LianderSensorEntityDescription(
         key="gas_ean",
@@ -266,15 +263,8 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         return self._attributes.icon
 
     def is_inactive(self) -> bool:
-        """Return whether a known count or status indicates inactivity."""
-        value = self.native_value
-        if value is None:
-            return False
-        if isinstance(value, (int, float)):
-            return value <= 0
-        if isinstance(value, str) and value.isdecimal():
-            return int(value) <= 0
-        return value not in ("In bedrijf", "Active")
+        """Determine if the sensor is active."""
+        return self.native_value not in ["In bedrijf", "Active"]
 
     def _get_address_value(self, data: list) -> str | None:
         """Get address string from coordinator data."""
