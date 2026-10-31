@@ -427,6 +427,19 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         return self._attributes.icon
 
     @property
+    def available(self) -> bool:
+        """Hide the feed-in timestamp only when feed-in is explicitly inactive."""
+        if not super().available:
+            return False
+        if self.entity_description.key == "feed_in_start_date":
+            connection = get_connection(
+                self.coordinator.data, self.entity_description.service_name
+            )
+            if connection is not None and connection.get("levertTerug") is False:
+                return False
+        return True
+
+    @property
     def suggested_display_precision(self) -> int | None:
         """Suggest one decimal when the raw maximum-power value contains a comma."""
         if self.entity_description.key == "maximum_power":
