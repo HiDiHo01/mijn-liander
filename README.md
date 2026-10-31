@@ -34,6 +34,10 @@ The generation and storage installation sensors use outlined icons when their
 count is zero and filled icons for positive counts. Unknown counts keep their
 default icon. This visual distinction applies to these two installation sensors.
 
+Maximum power and network costs accept decimal commas from Mijn Liander, such as
+`8,1`, and expose numeric values to Home Assistant. Missing or invalid measurements
+appear as unknown.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
