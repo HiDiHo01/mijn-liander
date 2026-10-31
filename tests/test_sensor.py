@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from homeassistant.components.sensor import async_rounded_state
+from homeassistant.components.sensor import SensorDeviceClass, async_rounded_state
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
@@ -20,6 +20,7 @@ NUMERIC_SENSOR_FIELDS = (
     pytest.param("maximum_power", "elektra", "maximaalVermogen", id="maximum-power"),
     pytest.param("network_costs", "elektra", "netwerkkosten", id="electricity-costs"),
     pytest.param("gas_network_costs", "gas", "netwerkkosten", id="gas-costs"),
+    pytest.param("gas_maximum_capacity", "gas", "maximaleCapaciteit", id="gas-capacity"),
 )
 
 
@@ -133,7 +134,7 @@ def test_invalid_numeric_api_values_are_unknown(
         ("electricity_ean", "elektra", "ean", "001234567890123456"),
         ("gas_ean", "gas", "ean", "001234567890123456"),
         ("connection_capacity", "elektra", "aansluitwaarde", "3 x 25 A"),
-        ("gas_maximum_capacity", "gas", "maximaleCapaciteit", "8,1"),
+        ("gas_connection_capacity", "gas", "aansluitwaarde", "G6"),
     ],
 )
 def test_numeric_conversion_preserves_text_fields(
@@ -143,6 +144,18 @@ def test_numeric_conversion_preserves_text_fields(
     sensor = _make_connection_sensor(sensor_key, connection_type, data_key, raw_value)
 
     assert sensor.native_value == raw_value
+
+
+def test_maximum_gas_capacity_has_volume_flow_unit() -> None:
+    """Expose numeric gas capacity in cubic meters per hour rather than gas usage."""
+    sensor = _make_connection_sensor(
+        "gas_maximum_capacity", "gas", "maximaleCapaciteit", "8,1"
+    )
+
+    assert sensor.native_unit_of_measurement == "m³/h"
+    assert sensor.unit_of_measurement == "m³/h"
+    assert sensor.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
+    assert sensor.state == pytest.approx(8.1)
 
 
 @pytest.mark.parametrize(
