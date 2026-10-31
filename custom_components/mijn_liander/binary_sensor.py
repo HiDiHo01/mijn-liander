@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -32,7 +32,8 @@ from .const import (
     VERSION,
 )
 from .coordinator import LianderDataUpdateCoordinator
-from .gas import filter_entity_descriptions, get_active_gas_connection
+from .data import get_connection, get_first_meter
+from .gas import filter_entity_descriptions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,8 +267,7 @@ class LianderBinarySensor(
             sw_version=VERSION,
         )
 
-        _LOGGER.debug(
-            "LianderBinarySensor initialized with coordinator: %s", coordinator)
+        self._attr_is_on = self._get_is_on()
 
     @property
     def icon(self) -> str | None:  # type: ignore[override]
@@ -277,45 +277,23 @@ class LianderBinarySensor(
             return icon_inactive
         return self.entity_description.icon
 
-    def _update_state(self) -> None:
-        """Update the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update binary state once through the coordinator's managed listener."""
         self._attr_is_on = self._get_is_on()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def is_inactive(self) -> bool:
         """Determine if the sensor is active."""
         return not getattr(self, "_attr_is_on", False)
 
-    def _get_is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        data = self.coordinator.data
-        if not data:
-            return False
-
-        connection_type = (
-            "gas"
-            if self.entity_description.service_name == SERVICE_NAME_GAS
-            else "elektra"
-        )
-        connection = (
-            get_active_gas_connection(data)
-            if connection_type == "gas"
-            else next(
-                (
-                    item
-                    for account in data
-                    if isinstance(account, dict)
-                    for item in (
-                        account.get("aansluitingen", {}).get(connection_type, [])
-                        or []
-                    )
-                    if isinstance(item, dict)
-                ),
-                None,
-            )
+    def _get_is_on(self) -> bool | None:
+        """Return validated booleans, retaining unknown for absent API fields."""
+        connection = get_connection(
+            self.coordinator.data, self.entity_description.service_name
         )
         if connection is None:
-            return False
+            return None
 
         key = self.entity_description.key.removeprefix("gas_")
         connection_fields = {
@@ -326,12 +304,11 @@ class LianderBinarySensor(
             "backfeeding_energy": "levertTerug",
         }
         if key == "status":
-            return connection.get("status") == "In bedrijf"
+            status = connection.get("status")
+            return status == "In bedrijf" if isinstance(status, str) else None
         if key in connection_fields:
-            return bool(connection.get(connection_fields[key], False))
-        if key == "net_metering":
-            meters = connection.get("meters", []) or []
-            return bool(meters and meters[0].get("salderingsregeling", False))
+            value = connection.get(connection_fields[key])
+            return value if isinstance(value, bool) else None
 
         meter_fields = {
             "smart_meter": "slimmeMeter",
@@ -339,38 +316,20 @@ class LianderBinarySensor(
             "analog": "analoog",
             "suitable_for_backfeeding": "geschiktVoorTerugleveren",
             "suitable_for_dual_tariff": "geschiktVoorDubbeltarief",
+            "net_metering": "salderingsregeling",
         }
         if key in meter_fields:
-            meters = connection.get("meters", []) or []
-            return bool(meters and meters[0].get(meter_fields[key], False))
+            meter = get_first_meter(connection)
+            value = meter.get(meter_fields[key]) if meter is not None else None
+            return value if isinstance(value, bool) else None
 
         _LOGGER.warning("Unknown binary sensor key: %s", self.entity_description.key)
-        return False
+        return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | list[object] | bool | None]:  # type: ignore[override]
-        """Return the state attributes."""
-        data = self.coordinator.data
-        attributes: dict[str, str | list[object] | bool | None] = {
-            "attribution": ATTRIBUTION,
-            "state": self.state,
-            "assumed_state": (self.assumed_state() if callable(self.assumed_state) else self.assumed_state),
-            # Flattening the list of 'elektra' across all accounts
-            "Elektra": [
-                elektra
-                for account in data
-                if isinstance(account, dict)
-                for elektra in account.get('aansluitingen', {}).get('elektra', [])
-            ]
-        }
-        return attributes
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback after entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._update_state)
-        )
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return attribution without duplicating raw personal account payloads."""
+        return {"attribution": ATTRIBUTION}
 
     async def async_update(self) -> None:
         """Trigger a manual update via the coordinator.

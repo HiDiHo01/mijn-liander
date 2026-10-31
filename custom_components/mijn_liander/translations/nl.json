@@ -115,6 +115,24 @@
       },
       "gas_number_of_registers": {
         "name": "Aantal gastelwerken"
+      },
+      "generation_power": {
+        "name": "Geïnstalleerd opwekvermogen"
+      },
+      "solar_panel_power": {
+        "name": "Geïnstalleerd zonnepanelenvermogen"
+      },
+      "meter_type": {
+        "name": "Type elektriciteitsmeter"
+      },
+      "contractless_cases": {
+        "name": "Contractloze elektriciteitszaken"
+      },
+      "gas_meter_type": {
+        "name": "Type gasmeter"
+      },
+      "gas_contractless_cases": {
+        "name": "Contractloze gaszaken"
       }
     },
     "binary_sensor": {

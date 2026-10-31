@@ -51,6 +51,21 @@ Maximum gas capacity is an integer sensor in cubic meters per hour (`m³/h`),
 displayed with zero decimals. It accepts decimal commas and truncates fractional
 parts toward zero (`8,9` becomes `8`). Missing or invalid values remain unknown.
 
+Additional sensors show electricity/gas meter types, contractless-case counts,
+and total registered generation and solar-panel ratings in kW. Rating totals
+require every installation to have a finite, non-negative value and a known kW
+unit; incomplete data is unknown rather than a partial total. Explicitly empty
+installation lists yield zero, while missing/malformed lists are unknown.
+The generation-installation count also exposes the allowlisted registration,
+inverter, source, identifier and rating fields in its `installations` attribute.
+The feed-in start sensor is a timezone-aware timestamp.
+
+Binary sensors initialize from the first API payload and update through one
+coordinator listener. Explicit `false` remains off; absent/malformed flags are
+unknown. The API response does not supply an analog-meter flag, so that sensor
+remains unknown unless the API provides it. Binary attributes and debug logs no
+longer duplicate raw account payloads or login credentials.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).

@@ -1,0 +1,81 @@
+[
+  {
+    "adres": {
+      "postcode": "0000 XX",
+      "straat": "Voorbeeldstraat",
+      "huisnummer": "10",
+      "toevoeging": "",
+      "plaats": "TESTPLAATS"
+    },
+    "aansluitingen": {
+      "elektra": [
+        {
+          "type": "ElektraAansluiting",
+          "ean": "000000000000000001",
+          "aansluitwaarde": "3x25A",
+          "status": "In bedrijf",
+          "netwerkkosten": "500.00",
+          "contract": true,
+          "toestemmingVoorUitlezen": true,
+          "meterstoringscheckToegestaan": true,
+          "meters": [
+            {
+              "type": "Elektrameter",
+              "meternummer": "TEST-ELECTRIC-001",
+              "aantalTelwerken": 4,
+              "slimmeMeter": true,
+              "salderingsregeling": false,
+              "aantalFasen": "3",
+              "gprs": false,
+              "geschiktVoorTerugleveren": true,
+              "geschiktVoorDubbeltarief": true
+            }
+          ],
+          "contractloosCases": [],
+          "nieuweSlimmeMeterAanvragenToegestaan": true,
+          "maximaalVermogen": "17,2",
+          "levertTerug": true,
+          "levertTerugVanaf": "2024-01-02T00:00:00Z",
+          "opwekinstallaties": [
+            {
+              "terugleverdatum": "2024-01-01",
+              "primaireBron": "B16",
+              "vermogenOpwekinstallatie": 4.0,
+              "merkOmvormer": "Testmerk",
+              "typeOmvormer": "Testmodel",
+              "ean": "000000000000000001",
+              "vermogenZonnepanelen": 4.4,
+              "maxVermogenEenheid": "KW",
+              "maxVermogenEenheidZonnepanelen": "KW",
+              "eanOpwekinstallatie": "000000000000000003",
+              "registratiedatum": "2024-01-01T10:00:00.123Z"
+            }
+          ],
+          "opslaginstallaties": []
+        }
+      ],
+      "gas": [
+        {
+          "type": "Gasaansluiting",
+          "ean": "000000000000000002",
+          "aansluitwaarde": "G6",
+          "status": "In bedrijf",
+          "netwerkkosten": "250.00",
+          "contract": true,
+          "toestemmingVoorUitlezen": true,
+          "meterstoringscheckToegestaan": true,
+          "meters": [
+            {
+              "type": "Gasmeter",
+              "meternummer": "TEST-GAS-001",
+              "aantalTelwerken": 1,
+              "slimmeMeter": true
+            }
+          ],
+          "contractloosCases": [],
+          "maximaleCapaciteit": "10"
+        }
+      ]
+    }
+  }
+]

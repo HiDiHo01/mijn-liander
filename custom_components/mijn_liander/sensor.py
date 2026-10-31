@@ -4,7 +4,7 @@ import asyncio
 import logging
 import math
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,7 +36,8 @@ from .const import (
     VERSION,
 )
 from .coordinator import LianderDataUpdateCoordinator
-from .gas import filter_entity_descriptions, get_active_gas_connection
+from .data import get_connection, get_first_meter, get_mapping_list
+from .gas import filter_entity_descriptions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,40 @@ ADDRESS_FIELDS: dict[str, str] = {
     "house_number_addition": "toevoeging",
     "city": "plaats",
 }
+GENERATION_FIELDS = (
+    "terugleverdatum",
+    "primaireBron",
+    "vermogenOpwekinstallatie",
+    "merkOmvormer",
+    "typeOmvormer",
+    "ean",
+    "vermogenZonnepanelen",
+    "maxVermogenEenheid",
+    "maxVermogenEenheidZonnepanelen",
+    "eanOpwekinstallatie",
+    "registratiedatum",
+)
+
+
+def _scalar_value(value: object) -> str | int | float | None:
+    """Reject containers, booleans, and non-finite values at scalar boundaries."""
+    if isinstance(value, bool) or not isinstance(value, str | int | float):
+        return None
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    return value
+
+
+def _generation_details(
+    installation: dict[str, object],
+) -> dict[str, str | int | float]:
+    """Select documented scalar installation details without copying unknown fields."""
+    details: dict[str, str | int | float] = {}
+    for field in GENERATION_FIELDS:
+        value = _scalar_value(installation.get(field))
+        if value is not None:
+            details[field] = value
+    return details
 
 
 def _get_address_data(data: object) -> dict[str, object] | None:
@@ -72,6 +107,38 @@ def _parse_numeric_value(value: object) -> float | None:
     except (ValueError, OverflowError):
         return None
     return number if math.isfinite(number) else None
+
+
+def _parse_timestamp(value: object) -> datetime | None:
+    """Parse an API timestamp only when it includes an explicit timezone."""
+    if not isinstance(value, str):
+        return None
+    try:
+        timestamp = datetime.fromisoformat(value)
+        if timestamp.tzinfo is None:
+            return None
+        return timestamp.astimezone(UTC)
+    except (ValueError, OverflowError):
+        return None
+
+
+def _sum_generation_power(
+    connection: dict[str, object], value_field: str, unit_field: str
+) -> float | None:
+    """Sum complete, finite kW installation ratings without partial totals."""
+    installations = get_mapping_list(connection.get("opwekinstallaties"))
+    if installations is None:
+        return None
+    total = 0.0
+    for installation in installations:
+        unit = installation.get(unit_field)
+        power = _parse_numeric_value(installation.get(value_field))
+        if not isinstance(unit, str) or unit.upper() != "KW" or power is None:
+            return None
+        if power < 0:
+            return None
+        total += power
+    return total if math.isfinite(total) else None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -177,6 +244,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="feed_in_start_date",
         translation_key="feed_in_start_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-arrow-right",
     ),
     LianderSensorEntityDescription(
@@ -190,6 +258,22 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         translation_key="storage_installations",
         icon="mdi:battery",
         icon_inactive="mdi:battery-outline",
+    ),
+    LianderSensorEntityDescription(
+        key="generation_power",
+        translation_key="generation_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    LianderSensorEntityDescription(
+        key="solar_panel_power",
+        translation_key="solar_panel_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    LianderSensorEntityDescription(key="meter_type", translation_key="meter_type"),
+    LianderSensorEntityDescription(
+        key="contractless_cases", translation_key="contractless_cases"
     ),
     LianderSensorEntityDescription(
         key="gas_ean",
@@ -236,6 +320,16 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         key="gas_number_of_registers",
         translation_key="gas_number_of_registers",
         icon="mdi:counter",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_meter_type",
+        translation_key="gas_meter_type",
+        service_name=SERVICE_NAME_GAS,
+    ),
+    LianderSensorEntityDescription(
+        key="gas_contractless_cases",
+        translation_key="gas_contractless_cases",
         service_name=SERVICE_NAME_GAS,
     ),
 ]
@@ -384,7 +478,9 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             return str(raw_value)
         return None
 
-    def _get_connection_value(self, connection: dict, key: str) -> str | int | float | None:
+    def _get_connection_value(
+        self, connection: dict[str, object], key: str
+    ) -> str | int | float | None:
         """Get sensor value from connection data."""
         connection_fields = {
             "electricity_ean": "ean",
@@ -398,16 +494,30 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             "gas_maximum_capacity": "maximaleCapaciteit",
         }
         if key in connection_fields:
-            return connection.get(connection_fields[key])
-        if key == "generation_installations":
-            return len(connection.get("opwekinstallaties", []) or [])
-        if key == "storage_installations":
-            return len(connection.get("opslaginstallaties", []) or [])
+            return _scalar_value(connection.get(connection_fields[key]))
+        collection_fields = {
+            "generation_installations": "opwekinstallaties",
+            "storage_installations": "opslaginstallaties",
+            "contractless_cases": "contractloosCases",
+            "gas_contractless_cases": "contractloosCases",
+        }
+        if key in collection_fields:
+            collection = get_mapping_list(connection.get(collection_fields[key]))
+            return len(collection) if collection is not None else None
+        if key == "generation_power":
+            return _sum_generation_power(
+                connection, "vermogenOpwekinstallatie", "maxVermogenEenheid"
+            )
+        if key == "solar_panel_power":
+            return _sum_generation_power(
+                connection, "vermogenZonnepanelen", "maxVermogenEenheidZonnepanelen"
+            )
 
-        meters = connection.get("meters", []) or []
+        meters = get_mapping_list(connection.get("meters"))
         if key in {"number_of_meters", "gas_number_of_meters"}:
-            return len(meters)
-        if not meters or not isinstance(meters[0], dict):
+            return len(meters) if meters is not None else None
+        meter = get_first_meter(connection)
+        if meter is None:
             return None
 
         meter_fields = {
@@ -416,8 +526,10 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             "number_of_phases": "aantalFasen",
             "gas_meter_number": "meternummer",
             "gas_number_of_registers": "aantalTelwerken",
+            "meter_type": "type",
+            "gas_meter_type": "type",
         }
-        return meters[0].get(meter_fields[key]) if key in meter_fields else None
+        return _scalar_value(meter.get(meter_fields[key])) if key in meter_fields else None
 
     def _get_raw_value(self) -> str | int | float | None:
         """Return the unconverted sensor value from coordinator data."""
@@ -432,37 +544,18 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         if self.entity_description.key in ADDRESS_FIELDS:
             return self._get_address_field_value(data)
 
-        connection_type = (
-            "gas"
-            if self.entity_description.service_name == SERVICE_NAME_GAS
-            else "elektra"
-        )
-        connection = (
-            get_active_gas_connection(data)
-            if connection_type == "gas"
-            else next(
-                (
-                    item
-                    for account in data
-                    if isinstance(account, dict)
-                    for item in (
-                        account.get("aansluitingen", {}).get(connection_type, [])
-                        or []
-                    )
-                    if isinstance(item, dict)
-                ),
-                None,
-            )
-        )
+        connection = get_connection(data, self.entity_description.service_name)
         if connection is None:
             return None
 
         return self._get_connection_value(connection, self.entity_description.key)
 
     @property
-    def native_value(self) -> str | int | float | None:
+    def native_value(self) -> str | int | float | datetime | None:
         """Return the sensor state, normalizing numeric API measurements."""
         value = self._get_raw_value()
+        if self.entity_description.key == "feed_in_start_date":
+            return _parse_timestamp(value)
         if self.entity_description.native_unit_of_measurement is not None:
             number = _parse_numeric_value(value)
             if (
@@ -472,3 +565,17 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
                 return int(number)
             return number
         return value
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object] | None:
+        """Expose allowlisted generation registration details without raw payloads."""
+        if self.entity_description.key != "generation_installations":
+            return None
+        connection = get_connection(self.coordinator.data, SERVICE_NAME_ELEKTRA)
+        if connection is None:
+            return None
+        installations = get_mapping_list(connection.get("opwekinstallaties"))
+        if installations is None:
+            return None
+        details = [_generation_details(installation) for installation in installations]
+        return {"installations": details}
