@@ -19,8 +19,9 @@ from custom_components.mijn_liander.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
     LianderBinarySensor,
 )
-from custom_components.mijn_liander.const import DOMAIN
+from custom_components.mijn_liander.const import DOMAIN, SERVICE_NAME_ELEKTRA
 from custom_components.mijn_liander.coordinator import LianderDataUpdateCoordinator
+from custom_components.mijn_liander.data import get_connection, get_mapping_list
 from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS, LianderSensor
 
 SENSOR_VALUES = {
@@ -132,6 +133,39 @@ def test_fixture_covers_all_descriptions() -> None:
     """Require expected values for every scalar and binary description."""
     assert {item.key for item in SENSOR_DESCRIPTIONS} == set(SENSOR_VALUES)
     assert {item.key for item in BINARY_SENSOR_DESCRIPTIONS} == set(BINARY_VALUES)
+
+
+@pytest.mark.parametrize("malformed", [None, "invalid", 42, []])
+@pytest.mark.parametrize("before_valid", [False, True])
+def test_malformed_connection_siblings_preserve_the_selected_account(
+    api_data: list[dict[str, object]], malformed: object, before_valid: bool
+) -> None:
+    """Skip invalid sibling records without switching either platform to another account."""
+    selected = _connection(api_data)
+    siblings = [malformed, selected] if before_valid else [selected, malformed]
+    api_data[0]["aansluitingen"]["elektra"] = siblings
+    fallback = deepcopy(selected)
+    fallback["maximaalVermogen"] = "99,9"
+    fallback["meters"][0]["gprs"] = True
+    api_data.append({"aansluitingen": {"elektra": [fallback]}})
+
+    assert _entity(api_data, "maximum_power").native_value == pytest.approx(17.2)
+    assert _entity(api_data, "gprs", binary=True).is_on is False
+    assert get_connection(api_data, SERVICE_NAME_ELEKTRA) is selected
+
+
+@pytest.mark.parametrize("before_valid", [False, True])
+def test_malformed_connection_sibling_does_not_make_entities_unknown(
+    api_data: list[dict[str, object]], before_valid: bool
+) -> None:
+    """Keep valid electricity readings when there is no later account to fall back to."""
+    selected = _connection(api_data)
+    siblings = [None, selected] if before_valid else [selected, None]
+    api_data[0]["aansluitingen"]["elektra"] = siblings
+
+    assert _entity(api_data, "maximum_power").state == pytest.approx(17.2)
+    assert _entity(api_data, "gprs", binary=True).is_on is False
+    assert get_mapping_list(siblings) is None
 
 
 @pytest.mark.parametrize("sensor_key", BINARY_VALUES)

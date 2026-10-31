@@ -12,7 +12,7 @@ def get_mapping_list(value: object) -> list[dict[str, object]] | None:
 
 
 def get_connection(data: object, service_name: str | None) -> dict[str, object] | None:
-    """Select the active gas or first electricity connection within this entry."""
+    """Select active gas or the first valid electricity record, skipping bad siblings."""
     if service_name == SERVICE_NAME_GAS:
         return get_active_gas_connection(data)
     if not isinstance(data, list):
@@ -23,9 +23,12 @@ def get_connection(data: object, service_name: str | None) -> dict[str, object] 
         connections = account.get("aansluitingen")
         if not isinstance(connections, dict):
             continue
-        electricity = get_mapping_list(connections.get("elektra"))
-        if electricity:
-            return electricity[0]
+        electricity = connections.get("elektra")
+        if not isinstance(electricity, list):
+            continue
+        for connection in electricity:
+            if isinstance(connection, dict):
+                return connection
     return None
 
 
