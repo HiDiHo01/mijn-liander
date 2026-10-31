@@ -300,6 +300,51 @@ async def test_reauth_cannot_switch_accounts(
     reload_mock.assert_not_awaited()
 
 
+async def test_reauth_timeout_preserves_credentials(
+    hass: HomeAssistant, authentication: AsyncMock
+) -> None:
+    """Keep a timed-out reauthentication in the form without changing account data."""
+    existing_entry = _add_account(hass, "first@example.com", "first@example.com")
+    original_data = dict(existing_entry.data)
+
+    async def blocked_login(username: str, password: str) -> dict[str, str]:
+        """Wait until the real timeout context cancels the authentication request."""
+        await asyncio.Event().wait()
+        return {"status": "success", "jwt_token": "unused-test-token"}
+
+    authentication.side_effect = blocked_login
+
+    with patch.object(
+        hass.config_entries, "async_reload", return_value=True
+    ) as reload_mock:
+        initialized_flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id},
+            data=dict(existing_entry.data),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            initialized_flow["flow_id"],
+            {**_credentials("first@example.com"), "timeout": 1},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert dict(existing_entry.data) == original_data
+    assert hass.config_entries.async_entries(DOMAIN) == [existing_entry]
+    authentication.assert_awaited_once_with("first@example.com", "test-password")
+    reload_mock.assert_not_awaited()
+
+
+async def test_login_request_timeout_is_mapped(login_response: MagicMock) -> None:
+    """Translate an HTTP-client timeout into the same connection error as the flow."""
+    login_response.json.side_effect = TimeoutError()
+
+    result = await _validate_input("first@example.com", "test-password")
+
+    assert result == {"status": "error", "error": "cannot_connect"}
+
+
 @pytest.mark.parametrize(
     "invalid_payload", [None, [], {}, {"jwt": None}, {"jwt": 123}, {"jwt": " "}]
 )

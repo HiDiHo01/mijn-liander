@@ -25,6 +25,10 @@ can only be configured once; capitalization and surrounding whitespace do not
 create a separate account. Re-authentication renews credentials for the existing
 account; add another integration entry to use a different email address.
 
+The generation and storage installation sensors use outlined icons when their
+count is zero and filled icons for positive counts. Unknown counts keep their
+default icon. This visual distinction applies to these two installation sensors.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
