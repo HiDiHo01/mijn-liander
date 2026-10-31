@@ -571,3 +571,20 @@ class TestRegistryMigration:
         assert legacy_device_two.identifiers == {
             (DOMAIN, "entry-id", "legacy")
         }
+
+
+def test_analog_cleanup_is_isolated_and_idempotent() -> None:
+    """Remove only deprecated analog entries owned by this integration and entry."""
+    entries = [
+        FakeEntity("binary_sensor.old", "account.analog", "binary_sensor", DOMAIN, "entry"),
+        FakeEntity("binary_sensor.current", "account_analog", "binary_sensor", DOMAIN, "entry"),
+        FakeEntity("binary_sensor.other_account", "account_analog", "binary_sensor", DOMAIN, "other"),
+        FakeEntity("binary_sensor.other_platform", "account_analog", "binary_sensor", "other", "entry"),
+        FakeEntity("sensor.unrelated", "account_analog", "sensor", DOMAIN, "entry"),
+        FakeEntity("binary_sensor.supported", "account_gprs", "binary_sensor", DOMAIN, "entry"),
+    ]
+    registry = FakeEntityRegistry(*entries)
+    entry = SimpleNamespace(unique_id="account", entry_id="entry")
+    _migrate_entity_unique_ids(registry, entry)
+    _migrate_entity_unique_ids(registry, entry)
+    assert set(registry.entities) == {item.entity_id for item in entries[2:]}

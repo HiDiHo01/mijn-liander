@@ -159,7 +159,7 @@ class TestGasEntities:
         )
 
         assert len(sensors) == 21
-        assert len(binary_sensors) == 12
+        assert len(binary_sensors) == 11
 
         assert all(
             description.service_name != SERVICE_NAME_GAS
