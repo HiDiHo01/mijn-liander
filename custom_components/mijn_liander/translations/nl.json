@@ -47,6 +47,21 @@
       "address": {
         "name": "Adres"
       },
+      "postal_code": {
+        "name": "Postcode"
+      },
+      "street": {
+        "name": "Straat"
+      },
+      "house_number": {
+        "name": "Huisnummer"
+      },
+      "house_number_addition": {
+        "name": "Toevoeging"
+      },
+      "city": {
+        "name": "Plaats"
+      },
       "maximum_power": {
         "name": "Maximaal Vermogen"
       },

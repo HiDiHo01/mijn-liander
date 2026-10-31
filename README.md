@@ -19,6 +19,12 @@ Then select **Download** in HACS and restart Home Assistant. If the button does 
 
 Gas entities are created only while the account has an active gas contract. If the contract is added or removed later, the integration refreshes its entities when the account data next updates.
 
+The User device includes the combined Address sensor and separate Postal code,
+Street, House number, House number addition, and City sensors. They share the
+same account address and update with coordinator data. Missing or invalid fields
+are unknown; an explicitly empty house number addition remains empty. House
+numbers are text, preserving leading zeros.
+
 You can add multiple Mijn Liander accounts by adding the integration again for each
 email address. Each account has its own data and devices. The same email address
 can only be configured once; capitalization and surrounding whitespace do not
