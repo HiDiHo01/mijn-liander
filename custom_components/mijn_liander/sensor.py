@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import math
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -33,6 +34,17 @@ from .coordinator import LianderDataUpdateCoordinator
 from .gas import filter_entity_descriptions, get_active_gas_connection
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _parse_numeric_value(value: object) -> float | None:
+    """Convert a finite API number or decimal-comma string to a float."""
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        return None
+    try:
+        number = float(value.replace(",", ".") if isinstance(value, str) else value)
+    except (ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -363,4 +375,7 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         if connection is None:
             return None
 
-        return self._get_connection_value(connection, self.entity_description.key)
+        value = self._get_connection_value(connection, self.entity_description.key)
+        if self.entity_description.native_unit_of_measurement is not None:
+            return _parse_numeric_value(value)
+        return value
