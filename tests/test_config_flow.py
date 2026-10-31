@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import voluptuous as vol
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.selector import TextSelector, TextSelectorType
 
 from custom_components.mijn_liander.config_flow import (
     STEP_USER_DATA_SCHEMA,
@@ -79,9 +81,6 @@ class TestConfigFlowErrors(unittest.TestCase):
 
     def test_schema_username_selector_type_email(self) -> None:
         """CONF_USERNAME schema field uses TextSelector with TextSelectorType.EMAIL."""
-        from homeassistant.const import CONF_USERNAME
-        from homeassistant.helpers.selector import TextSelector, TextSelectorType
-
         username_selector = None
         for key, val in STEP_USER_DATA_SCHEMA.schema.items():
             if getattr(key, "schema", key) == CONF_USERNAME:
@@ -91,6 +90,18 @@ class TestConfigFlowErrors(unittest.TestCase):
         self.assertIsNotNone(username_selector)
         self.assertIsInstance(username_selector, TextSelector)
         self.assertEqual(username_selector.config.get("type"), TextSelectorType.EMAIL)
+
+    def test_credential_selectors_request_no_autofill(self) -> None:
+        """Keep semantic credential types without requesting origin-login autofill."""
+        for field_name, selector_type in (
+            (CONF_USERNAME, TextSelectorType.EMAIL),
+            (CONF_PASSWORD, TextSelectorType.PASSWORD),
+        ):
+            with self.subTest(field=field_name):
+                selector = STEP_USER_DATA_SCHEMA.schema[field_name]
+                self.assertIsInstance(selector, TextSelector)
+                self.assertEqual(selector.config.get("type"), selector_type)
+                self.assertEqual(selector.config.get("autocomplete"), "off")
 
     def test_schema_username_rejects_non_strings(self) -> None:
         """Reject non-string usernames in the UI schema before authentication."""

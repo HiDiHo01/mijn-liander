@@ -44,6 +44,7 @@ These instructions apply to the entire repository. More specific `AGENTS.md` fil
 - Keep entity unique IDs stable and device identifiers and `via_device` references valid. Do not create orphaned devices or entities.
 - Create gas-related entities only when the account has an active gas contract; handle contract changes and stale registry entries safely.
 - Handle missing, `None`, malformed, and unexpected API values without making unrelated entities unavailable.
+- For Mijn Liander credentials entered on the Home Assistant origin, keep email/password selectors and request `autocomplete="off"` for both fields. Do not use the origin-login hints `username` or `current-password` for these external-service credentials. Browsers and password managers can override this request; do not describe it as credential isolation.
 - Keep manifest metadata, translations, entity descriptions, diagnostics, and documentation aligned with implementation.
 
 ## Pull requests and review comments

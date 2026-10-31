@@ -23,10 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.EMAIL)
+            TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="off")
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
         ),
         vol.Optional("timeout", default=5): vol.All(
             cv.positive_int, vol.Range(min=1, max=30)

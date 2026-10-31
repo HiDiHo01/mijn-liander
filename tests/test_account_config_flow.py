@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import TextSelector, TextSelectorType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mijn_liander.config_flow import _validate_input
@@ -69,6 +70,38 @@ def login_response_fixture() -> Generator[MagicMock]:
         factory.return_value.__aenter__.return_value = session
         session.post.return_value.__aenter__.return_value = response
         yield response
+
+
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_REAUTH])
+async def test_credential_forms_keep_autocomplete_metadata(
+    hass: HomeAssistant, authentication: AsyncMock, source: str
+) -> None:
+    """Expose autofill opt-out in both real forms without submitting credentials."""
+    context = {"source": source}
+    entry_data: dict[str, object] | None = None
+    if source == SOURCE_REAUTH:
+        existing_entry = _add_account(hass, "first@example.com", "first@example.com")
+        context["entry_id"] = existing_entry.entry_id
+        entry_data = dict(existing_entry.data)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context=context, data=entry_data
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == (
+        "reauth_confirm" if source == SOURCE_REAUTH else "user"
+    )
+    assert result["errors"] == {}
+    for field_name, selector_type in (
+        (CONF_USERNAME, TextSelectorType.EMAIL),
+        (CONF_PASSWORD, TextSelectorType.PASSWORD),
+    ):
+        selector = result["data_schema"].schema[field_name]
+        assert isinstance(selector, TextSelector)
+        assert selector.config.get("type") == selector_type
+        assert selector.config.get("autocomplete") == "off"
+    authentication.assert_not_awaited()
 
 
 async def test_multiple_email_accounts(
