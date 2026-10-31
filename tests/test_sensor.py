@@ -16,10 +16,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.sensor import SENSOR_DESCRIPTIONS, LianderSensor
 
-NUMERIC_SENSOR_FIELDS = (
+FLOAT_SENSOR_FIELDS = (
     pytest.param("maximum_power", "elektra", "maximaalVermogen", id="maximum-power"),
     pytest.param("network_costs", "elektra", "netwerkkosten", id="electricity-costs"),
     pytest.param("gas_network_costs", "gas", "netwerkkosten", id="gas-costs"),
+)
+NUMERIC_SENSOR_FIELDS = (
+    *FLOAT_SENSOR_FIELDS,
     pytest.param("gas_maximum_capacity", "gas", "maximaleCapaciteit", id="gas-capacity"),
 )
 
@@ -62,7 +65,7 @@ def _make_connection_sensor(
 
 
 @pytest.mark.parametrize(
-    ("sensor_key", "connection_type", "data_key"), NUMERIC_SENSOR_FIELDS
+    ("sensor_key", "connection_type", "data_key"), FLOAT_SENSOR_FIELDS
 )
 @pytest.mark.parametrize(
     ("raw_value", "expected_value"),
@@ -146,16 +149,36 @@ def test_numeric_conversion_preserves_text_fields(
     assert sensor.native_value == raw_value
 
 
-def test_maximum_gas_capacity_has_volume_flow_unit() -> None:
-    """Expose numeric gas capacity in cubic meters per hour rather than gas usage."""
+@pytest.mark.parametrize(
+    ("raw_value", "expected_value"),
+    [
+        ("8,1", 8),
+        (" 8,1 ", 8),
+        ("8.9", 8),
+        ("8", 8),
+        (8, 8),
+        (8.9, 8),
+        (0, 0),
+        ("0,0", 0),
+        ("-2,5", -2),
+    ],
+)
+def test_maximum_gas_capacity_is_integer_volume_flow(
+    raw_value: object, expected_value: int
+) -> None:
+    """Expose integer m³/h, truncating fractions toward zero after validation."""
     sensor = _make_connection_sensor(
-        "gas_maximum_capacity", "gas", "maximaleCapaciteit", "8,1"
+        "gas_maximum_capacity", "gas", "maximaleCapaciteit", raw_value
     )
 
     assert sensor.native_unit_of_measurement == "m³/h"
     assert sensor.unit_of_measurement == "m³/h"
     assert sensor.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
-    assert sensor.state == pytest.approx(8.1)
+    assert sensor.suggested_display_precision == 0
+    assert type(sensor.native_value) is int
+    assert sensor.native_value == expected_value
+    assert type(sensor.state) is int
+    assert sensor.state == expected_value
 
 
 @pytest.mark.parametrize(

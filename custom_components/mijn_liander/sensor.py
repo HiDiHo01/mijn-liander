@@ -171,6 +171,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         translation_key="gas_maximum_capacity",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        suggested_display_precision=0,
         icon="mdi:gauge",
         service_name=SERVICE_NAME_GAS,
     ),
@@ -406,5 +407,11 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         """Return the sensor state, normalizing numeric API measurements."""
         value = self._get_raw_value()
         if self.entity_description.native_unit_of_measurement is not None:
-            return _parse_numeric_value(value)
+            number = _parse_numeric_value(value)
+            if (
+                self.entity_description.key == "gas_maximum_capacity"
+                and number is not None
+            ):
+                return int(number)
+            return number
         return value
