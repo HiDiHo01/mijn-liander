@@ -40,6 +40,26 @@ from .gas import filter_entity_descriptions, get_active_gas_connection
 
 _LOGGER = logging.getLogger(__name__)
 
+ADDRESS_FIELDS: dict[str, str] = {
+    "postal_code": "postcode",
+    "street": "straat",
+    "house_number": "huisnummer",
+    "house_number_addition": "toevoeging",
+    "city": "plaats",
+}
+
+
+def _get_address_data(data: object) -> dict[str, object] | None:
+    """Return the first account address used by all user address sensors."""
+    if not isinstance(data, list):
+        return None
+    for account in data:
+        if isinstance(account, dict) and isinstance(
+            address := account.get("adres"), dict
+        ):
+            return address
+    return None
+
 
 def _parse_numeric_value(value: object) -> float | None:
     """Convert a finite API number or decimal-comma string to a float."""
@@ -81,6 +101,31 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         key="address",
         translation_key="address",
         icon="mdi:home",
+        service_name=SERVICE_NAME_USER,
+    ),
+    LianderSensorEntityDescription(
+        key="postal_code",
+        translation_key="postal_code",
+        service_name=SERVICE_NAME_USER,
+    ),
+    LianderSensorEntityDescription(
+        key="street",
+        translation_key="street",
+        service_name=SERVICE_NAME_USER,
+    ),
+    LianderSensorEntityDescription(
+        key="house_number",
+        translation_key="house_number",
+        service_name=SERVICE_NAME_USER,
+    ),
+    LianderSensorEntityDescription(
+        key="house_number_addition",
+        translation_key="house_number_addition",
+        service_name=SERVICE_NAME_USER,
+    ),
+    LianderSensorEntityDescription(
+        key="city",
+        translation_key="city",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
@@ -314,19 +359,29 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             return int(value) <= 0
         return value not in ("In bedrijf", "Active")
 
-    def _get_address_value(self, data: list) -> str | None:
+    def _get_address_value(self, data: object) -> str | None:
         """Get address string from coordinator data."""
-        for account in data:
-            if not isinstance(account, dict):
-                continue
-            address = account.get("adres")
-            if isinstance(address, dict):
-                street = address.get("straat", "")
-                house_number = address.get("huisnummer", "")
-                addition = address.get("toevoeging", "")
-                postal_code = address.get("postcode", "")
-                city = address.get("plaats", "")
-                return f"{street} {house_number}{addition} {postal_code} {city}".strip()
+        address = _get_address_data(data)
+        if address is None:
+            return None
+        street = address.get("straat", "")
+        house_number = address.get("huisnummer", "")
+        addition = address.get("toevoeging", "")
+        postal_code = address.get("postcode", "")
+        city = address.get("plaats", "")
+        return f"{street} {house_number}{addition} {postal_code} {city}".strip()
+
+    def _get_address_field_value(self, data: object) -> str | None:
+        """Return one textual address field, preserving numeric house numbers."""
+        address = _get_address_data(data)
+        if address is None:
+            return None
+        sensor_key = self.entity_description.key
+        raw_value = address.get(ADDRESS_FIELDS[sensor_key])
+        if isinstance(raw_value, str):
+            return raw_value
+        if sensor_key == "house_number" and type(raw_value) is int:
+            return str(raw_value)
         return None
 
     def _get_connection_value(self, connection: dict, key: str) -> str | int | float | None:
@@ -374,6 +429,8 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
 
         if self.entity_description.key == "address":
             return self._get_address_value(data)
+        if self.entity_description.key in ADDRESS_FIELDS:
+            return self._get_address_field_value(data)
 
         connection_type = (
             "gas"

@@ -158,7 +158,7 @@ class TestGasEntities:
             gas_data(False),
         )
 
-        assert len(sensors) == 12
+        assert len(sensors) == 17
         assert len(binary_sensors) == 12
 
         assert all(

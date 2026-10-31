@@ -47,6 +47,21 @@
       "address": {
         "name": "Address"
       },
+      "postal_code": {
+        "name": "Postal code"
+      },
+      "street": {
+        "name": "Street"
+      },
+      "house_number": {
+        "name": "House number"
+      },
+      "house_number_addition": {
+        "name": "House number addition"
+      },
+      "city": {
+        "name": "City"
+      },
       "maximum_power": {
         "name": "Maximum Power"
       },
