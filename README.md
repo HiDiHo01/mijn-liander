@@ -58,7 +58,10 @@ unit; incomplete data is unknown rather than a partial total. Explicitly empty
 installation lists yield zero, while missing/malformed lists are unknown.
 The generation-installation count also exposes the allowlisted registration,
 inverter, source, identifier and rating fields in its `installations` attribute.
-The feed-in start sensor is a timezone-aware timestamp.
+The feed-in start sensor is a timezone-aware timestamp. It becomes unavailable
+when feed-in is explicitly inactive and restores its timestamp when feed-in
+becomes active again. Missing or malformed feed-in flags retain normal timestamp
+behavior; missing or invalid dates remain unknown.
 
 Binary sensors initialize from the first API payload and update through one
 coordinator listener. Explicit `false` remains off; absent/malformed flags are

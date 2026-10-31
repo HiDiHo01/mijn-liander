@@ -432,3 +432,64 @@ async def test_coordinator_debug_logs_do_not_expose_payloads(
         "000000000000000001",
     ):
         assert private_value not in caplog.text
+
+
+@pytest.mark.parametrize("initial_flag", [True, False])
+async def test_feed_in_timestamp_availability_lifecycle(
+    hass: HomeAssistant, api_data: list[dict[str, object]], initial_flag: bool
+) -> None:
+    """Scope conditional availability to one entry and retain managed listeners."""
+    component = EntityComponent(logging.getLogger(__name__), "sensor", hass)
+    coordinators = []
+    entities = []
+    for index in range(2):
+        coordinator = DataUpdateCoordinator(
+            hass, logging.getLogger(__name__), name=DOMAIN, config_entry=None
+        )
+        data = deepcopy(api_data)
+        _connection(data)["levertTerug"] = initial_flag if index == 0 else True
+        coordinator.async_set_updated_data(data)
+        coordinators.append(coordinator)
+        entry = MockConfigEntry(domain=DOMAIN, unique_id=f"fixture-{index}")
+        entry.add_to_hass(hass)
+        component._platforms["sensor"].config_entry = entry
+        for key in ("feed_in_start_date", "maximum_power"):
+            description = next(item for item in SENSOR_DESCRIPTIONS if item.key == key)
+            entity = LianderSensor(coordinator, description, entry)
+            entity.entity_id = f"sensor.entry_{index}_{key}"
+            entities.append(entity)
+            await component.async_add_entities([entity])
+    await hass.async_block_till_done()
+    timestamp = "2024-01-02T00:00:00+00:00"
+    assert hass.states.get("sensor.entry_0_feed_in_start_date").state == (
+        timestamp if initial_flag else "unavailable"
+    )
+    for flag in (True, False, True, None, "false", 0, {}, []):
+        updated = deepcopy(api_data)
+        _connection(updated)["levertTerug"] = flag
+        coordinators[0].async_set_updated_data(updated)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.entry_0_feed_in_start_date").state == (
+            "unavailable" if flag is False else timestamp
+        )
+        assert hass.states.get("sensor.entry_0_maximum_power").state == "17.2"
+        assert hass.states.get("sensor.entry_1_feed_in_start_date").state == timestamp
+    updated = deepcopy(api_data)
+    del _connection(updated)["levertTerug"]
+    coordinators[0].async_set_updated_data(updated)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.entry_0_feed_in_start_date").state == timestamp
+    for date in (None, "invalid", "2024-01-01"):
+        updated = deepcopy(api_data)
+        _connection(updated)["levertTerugVanaf"] = date
+        coordinators[0].async_set_updated_data(updated)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.entry_0_feed_in_start_date").state == "unknown"
+    coordinators[0].async_set_update_error(ValueError("Synthetic update failure"))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.entry_0_feed_in_start_date").state == "unavailable"
+    assert hass.states.get("sensor.entry_1_feed_in_start_date").state == timestamp
+    assert all(len(coordinator._listeners) == 2 for coordinator in coordinators)
+    for entity in entities:
+        await component.async_remove_entity(entity.entity_id)
+    assert all(not coordinator._listeners for coordinator in coordinators)
