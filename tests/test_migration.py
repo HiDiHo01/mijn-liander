@@ -16,6 +16,7 @@ from custom_components.mijn_liander.migration import (
     _migrate_electricity_device,
     _migrate_entity_unique_ids,
     _process_single_entity_migration,
+    remove_inactive_gas_registry_entries,
 )
 
 
@@ -167,7 +168,7 @@ class TestRegistryMigration:
         )
 
     def test_migrate_sensor_when_updated_duplicate_exists(self) -> None:
-        """Keep the legacy entity ID when the current unique ID already exists."""
+        """Keep the current entity when its unique ID already exists."""
         legacy = FakeEntity(
             entity_id="sensor.liander_address",
             unique_id="account@example.com.address",
@@ -187,15 +188,7 @@ class TestRegistryMigration:
         _migrate_entity_unique_ids(registry, self.config_entry)
         _migrate_entity_unique_ids(registry, self.config_entry)
 
-        assert list(registry.entities) == ["sensor.liander_address"]
-        assert (
-            registry.entities["sensor.liander_address"].unique_id
-            == "account@example.com_address"
-        )
-        assert (
-            registry.entities["sensor.liander_address"].entity_id
-            == "sensor.liander_address"
-        )
+        assert registry.entities == {updated.entity_id: updated}
 
     def test_migrate_legacy_binary_sensor_unique_id(self) -> None:
         """Migrate a legacy binary-sensor ID using the shared ID format."""
@@ -253,10 +246,15 @@ class TestRegistryMigration:
         assert set(registry.entities) == {
             f"binary_sensor.liander_{legacy_key}"
             for legacy_key in key_mappings
-        }
+            if legacy_key != "contract"
+        } | {duplicate.entity_id}
 
         for legacy_key, current_key in key_mappings.items():
-            entity = registry.entities[f"binary_sensor.liander_{legacy_key}"]
+            entity = (
+                duplicate
+                if legacy_key == "contract"
+                else registry.entities[f"binary_sensor.liander_{legacy_key}"]
+            )
             assert entity.unique_id == f"account@example.com_{current_key}"
 
     def test_remove_obsolete_legacy_status_sensor(self) -> None:
@@ -624,6 +622,7 @@ def test_reject_missing_or_foreign_duplicate(duplicate_missing: bool) -> None:
     assert duplicate.unique_id == "account_address"
 
 
+@pytest.mark.parametrize("current_first", [False, True])
 @pytest.mark.parametrize(
     ("domain", "legacy_key", "current_key"),
     [
@@ -636,8 +635,9 @@ async def test_duplicate_migration_preserves_registry_metadata(
     domain: str,
     legacy_key: str,
     current_key: str,
+    current_first: bool,
 ) -> None:
-    """Retain legacy registry identity, settings, and device across repeated runs."""
+    """Retain current registry identity, settings, and device across repeated runs."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
     config_entry.add_to_hass(hass)
     registry = er.async_get(hass)
@@ -646,6 +646,11 @@ async def test_duplicate_migration_preserves_registry_metadata(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, config_entry.entry_id)},
     )
+    if current_first:
+        registry.async_get_or_create(
+            domain, DOMAIN, f"account_{current_key}",
+            config_entry=config_entry, suggested_object_id="duplicate",
+        )
     legacy = registry.async_get_or_create(
         domain,
         DOMAIN,
@@ -676,24 +681,71 @@ async def test_duplicate_migration_preserves_registry_metadata(
         suggested_object_id="duplicate",
     )
     registry.async_update_entity(
-        duplicate.entity_id, name="Duplicate meter", icon="mdi:home"
+        duplicate.entity_id, name="Duplicate meter", device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+        hidden_by=er.RegistryEntryHider.USER, labels={"current"},
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     registry.async_update_entity_options(
         duplicate.entity_id, DOMAIN, {"custom_setting": "duplicate"}
     )
 
+    duplicate = registry.async_get(duplicate.entity_id)
+    assert duplicate is not None
     for _ in range(2):
         _migrate_entity_unique_ids(registry, config_entry)
-        retained = registry.async_get(legacy.entity_id)
+        retained = registry.async_get(duplicate.entity_id)
         assert retained is not None
         assert retained.unique_id == f"account_{current_key}"
         for attribute in (
             "id", "entity_id", "name", "icon", "disabled_by", "hidden_by",
             "labels", "entity_category", "options", "device_id", "config_entry_id",
         ):
-            assert getattr(retained, attribute) == getattr(legacy, attribute)
+            assert getattr(retained, attribute) == getattr(duplicate, attribute)
         assert devices.async_get(retained.device_id) == device
-        assert registry.async_get(duplicate.entity_id) is None
+        assert registry.async_get(legacy.entity_id) is None
         assert registry.async_get_entity_id(
             domain, DOMAIN, f"account_{current_key}"
-        ) == legacy.entity_id
+        ) == duplicate.entity_id
+
+
+@pytest.mark.parametrize("foreign_entity", [False, True])
+async def test_duplicate_migration_allows_inactive_gas_cleanup(
+    hass: HomeAssistant, foreign_entity: bool,
+) -> None:
+    """Remove owned gas duplicates and devices while preserving foreign entities."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
+    config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    devices = dr.async_get(hass)
+    device = devices.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}_Gas")},
+        model="Gas",
+    )
+    legacy = registry.async_get_or_create(
+        "sensor", DOMAIN, "account.gas_ean", config_entry=config_entry,
+        device_id=device.id, suggested_object_id="legacy_gas",
+    )
+    current = registry.async_get_or_create(
+        "sensor", DOMAIN, "account_gas_ean", config_entry=config_entry,
+        device_id=device.id, suggested_object_id="current_gas",
+    )
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+    foreign = None
+    if foreign_entity:
+        foreign = registry.async_get_or_create(
+            "sensor", "other", "foreign", config_entry=other,
+            device_id=device.id,
+        )
+    for _ in range(2):
+        _migrate_entity_unique_ids(registry, config_entry)
+        remove_inactive_gas_registry_entries(hass, config_entry)
+        assert registry.async_get(legacy.entity_id) is None
+        assert registry.async_get(current.entity_id) is None
+        if foreign is not None:
+            assert registry.async_get(foreign.entity_id) == foreign
+            assert devices.async_get(device.id) is not None
+        else:
+            assert devices.async_get(device.id) is None

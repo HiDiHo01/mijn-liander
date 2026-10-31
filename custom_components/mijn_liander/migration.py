@@ -83,7 +83,7 @@ def _migrate_entity_preserving_id(
     entry: entity_registry.RegistryEntry,
     new_unique_id: str,
 ) -> bool:
-    """Update the legacy entry in place, removing only a verified owned duplicate."""
+    """Retain an owned current entry, or update the legacy unique ID in place."""
     existing_entity_id = registry.async_get_entity_id(
         entry.domain,
         entry.platform,
@@ -101,7 +101,8 @@ def _migrate_entity_preserving_id(
             )
             return False
 
-        registry.async_remove(existing_entity_id)
+        registry.async_remove(entry.entity_id)
+        return True
 
     registry.async_update_entity(
         entry.entity_id,
@@ -114,7 +115,7 @@ def _migrate_entity_unique_ids(
     registry: entity_registry.EntityRegistry,
     config_entry: ConfigEntry,
 ) -> None:
-    """Keep the legacy entity IDs while using the current unique ID format."""
+    """Use current unique IDs, retaining current entries when duplicates exist."""
     account_id = config_entry.unique_id
     dotted_prefix = f"{account_id}."
     underscored_prefix = f"{account_id}_"
