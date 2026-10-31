@@ -62,8 +62,8 @@ The feed-in start sensor is a timezone-aware timestamp.
 
 Binary sensors initialize from the first API payload and update through one
 coordinator listener. Explicit `false` remains off; absent/malformed flags are
-unknown. The API response does not supply an analog-meter flag, so that sensor
-remains unknown unless the API provides it. Binary attributes and debug logs no
+unknown. The deprecated analog-meter binary sensor is removed, including its
+existing registry entries. Binary attributes and debug logs no
 longer duplicate raw account payloads or login credentials.
 
 ## Manual installation

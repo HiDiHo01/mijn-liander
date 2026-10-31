@@ -40,6 +40,13 @@ def _process_single_entity_migration(
         return False
 
     if (
+        entry.domain == "binary_sensor"
+        and entry.unique_id in {f"{dotted_prefix}analog", f"{underscored_prefix}analog"}
+    ):
+        registry.async_remove(entry.entity_id)
+        return True
+
+    if (
         entry.domain == "sensor"
         and entry.unique_id in obsolete_sensor_unique_ids
     ):

@@ -151,9 +151,6 @@
       "gprs": {
         "name": "GPRS Connection"
       },
-      "analog": {
-        "name": "Analog Meter"
-      },
       "suitable_for_backfeeding": {
         "name": "Suitable for Feed-in"
       },

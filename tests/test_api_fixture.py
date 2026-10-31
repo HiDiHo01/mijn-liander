@@ -62,7 +62,6 @@ BINARY_VALUES = {
     "permission_to_read_data": True,
     "smart_meter": True,
     "gprs": False,
-    "analog": None,
     "suitable_for_backfeeding": True,
     "suitable_for_dual_tariff": True,
     "backfeeding_energy": True,
@@ -208,7 +207,7 @@ def test_invalid_first_meter_is_not_replaced_by_a_later_meter(
 def test_initial_binary_states_are_not_truthiness_defaults(
     api_data: list[dict[str, object]], sensor_key: str
 ) -> None:
-    """Honor explicit booleans on initialization and leave absent analog data unknown."""
+    """Honor explicit booleans on initialization."""
     entity = _entity(api_data, sensor_key, binary=True)
     assert entity.is_on is BINARY_VALUES[sensor_key]
     assert set(entity.extra_state_attributes) == {"attribution"}
@@ -364,6 +363,7 @@ async def test_actual_entity_updates_use_one_listener_and_clean_up(
     await sensor_component.async_add_entities(sensors)
     await binary_component.async_add_entities(binaries)
     await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.fixture_analog") is None
     assert len(coordinator._listeners) == len(sensors) + len(binaries)
     for key, expected in BINARY_VALUES.items():
         state = hass.states.get(f"binary_sensor.fixture_{key}")
@@ -432,3 +432,12 @@ async def test_coordinator_debug_logs_do_not_expose_payloads(
         "000000000000000001",
     ):
         assert private_value not in caplog.text
+
+
+def test_missing_supported_flags_are_unknown(api_data: list[dict[str, object]]) -> None:
+    """Keep missing supported connection and meter flags unknown."""
+    connection = _connection(api_data)
+    del connection["toestemmingVoorUitlezen"]
+    del connection["meters"][0]["gprs"]
+    assert _entity(api_data, "permission_to_read_data", binary=True).is_on is None
+    assert _entity(api_data, "gprs", binary=True).is_on is None
