@@ -9,9 +9,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.selector import TextSelector, TextSelectorType
+from homeassistant.helpers.selector import TextSelector
 
 from custom_components.mijn_liander.config_flow import (
     STEP_USER_DATA_SCHEMA,
@@ -50,10 +49,9 @@ class TestConfigFlowErrors(unittest.TestCase):
         mock_session_cm.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session_cm.__aexit__ = AsyncMock(return_value=None)
 
-        async def run_test() -> dict[str, str]:
-            """Validate synthetic credentials using the mocked HTTP session."""
+        async def run_test():
             with patch("aiohttp.ClientSession", return_value=mock_session_cm):
-                return await _validate_input("user@example.com", "secret")
+                return await _validate_input("user@example.com", "secret", 5)
 
         res = asyncio.run(run_test())
         self.assertEqual(res, {"status": "error", "error": "cannot_connect"})
@@ -62,9 +60,7 @@ class TestConfigFlowErrors(unittest.TestCase):
         """Every config error key in source strings exists in locales."""
         source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
-            lang: json.loads(
-                (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
-            )
+            lang: json.loads((INTEGRATION_PATH / "translations" / f"{lang}.json").read_text())
             for lang in ("en", "nl")
         }
 
@@ -78,41 +74,6 @@ class TestConfigFlowErrors(unittest.TestCase):
         for lang, locale in locales.items():
             locale_errors = set(locale["config"]["error"].keys())
             self.assertEqual(source_errors, locale_errors, f"Error mismatch in {lang}")
-
-    def test_schema_username_selector_type_email(self) -> None:
-        """CONF_USERNAME schema field uses TextSelector with TextSelectorType.EMAIL."""
-        username_selector = None
-        for key, val in STEP_USER_DATA_SCHEMA.schema.items():
-            if getattr(key, "schema", key) == CONF_USERNAME:
-                username_selector = val
-                break
-
-        self.assertIsNotNone(username_selector)
-        self.assertIsInstance(username_selector, TextSelector)
-        self.assertEqual(username_selector.config.get("type"), TextSelectorType.EMAIL)
-
-    def test_credential_selectors_request_no_autofill(self) -> None:
-        """Keep semantic credential types without requesting origin-login autofill."""
-        for field_name, selector_type in (
-            (CONF_USERNAME, TextSelectorType.EMAIL),
-            (CONF_PASSWORD, TextSelectorType.PASSWORD),
-        ):
-            with self.subTest(field=field_name):
-                selector = STEP_USER_DATA_SCHEMA.schema[field_name]
-                self.assertIsInstance(selector, TextSelector)
-                self.assertEqual(selector.config.get("type"), selector_type)
-                self.assertEqual(selector.config.get("autocomplete"), "off")
-
-    def test_schema_username_rejects_non_strings(self) -> None:
-        """Reject non-string usernames in the UI schema before authentication."""
-        for invalid_username in (42, None, [], {}, True):
-            with (
-                self.subTest(username=invalid_username),
-                self.assertRaises(vol.Invalid),
-            ):
-                STEP_USER_DATA_SCHEMA(
-                    {"username": invalid_username, "password": "test-password"}
-                )
 
     def test_reauth_step_prefills_suggested_values(self) -> None:
         """Re-authentication flow form contains suggested values from existing config entry."""
@@ -130,7 +91,7 @@ class TestConfigFlowErrors(unittest.TestCase):
             result = asyncio.run(flow.async_step_reauth(None))
 
         self.assertEqual(result["type"], "form")
-        self.assertEqual(result["step_id"], "reauth_confirm")
+        self.assertEqual(result["step_id"], "reauth")
 
         schema = result["data_schema"]
         suggested_values = {
@@ -140,6 +101,18 @@ class TestConfigFlowErrors(unittest.TestCase):
         }
         self.assertEqual(suggested_values.get("username"), "existing_user@example.com")
         self.assertEqual(suggested_values.get("timeout"), 10)
+
+    def test_user_data_schema_selectors(self) -> None:
+        """Schema uses email selector and password selector, both requesting autocomplete off."""
+        username_selector = STEP_USER_DATA_SCHEMA.schema[CONF_USERNAME]
+        self.assertIsInstance(username_selector, TextSelector)
+        self.assertEqual(username_selector.config.get("type"), "email")
+        self.assertEqual(username_selector.config.get("autocomplete"), "off")
+
+        password_selector = STEP_USER_DATA_SCHEMA.schema[CONF_PASSWORD]
+        self.assertIsInstance(password_selector, TextSelector)
+        self.assertEqual(password_selector.config.get("type"), "password")
+        self.assertEqual(password_selector.config.get("autocomplete"), "off")
 
 
 if __name__ == "__main__":

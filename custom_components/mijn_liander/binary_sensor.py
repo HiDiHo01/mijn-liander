@@ -36,10 +36,6 @@ from .gas import filter_entity_descriptions, get_active_gas_connection
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON_CHECK_CIRCLE = "mdi:check-circle"
-ICON_METER_ELECTRIC = "mdi:meter-electric"
-ICON_METER_ELECTRIC_OUTLINE = "mdi:meter-electric-outline"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -106,14 +102,14 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="status",
         translation_key="status",
-        icon=ICON_CHECK_CIRCLE,
+        icon="mdi:check-circle",
         icon_inactive="mdi:cancel",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
         key="contract_active",
         translation_key="contract_active",
-        icon=ICON_CHECK_CIRCLE,
+        icon="mdi:check-circle",
         icon_inactive="mdi:close-circle",
         service_name="Elektra"
     ),
@@ -127,8 +123,8 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="smart_meter",
         translation_key="smart_meter",
-        icon=ICON_METER_ELECTRIC,
-        icon_inactive=ICON_METER_ELECTRIC_OUTLINE,
+        icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name="Elektra"
     ),
     LianderBinaryEntityDescription(
@@ -170,15 +166,15 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="meter_fault_check_allowed",
         translation_key="meter_fault_check_allowed",
-        icon=ICON_METER_ELECTRIC,
-        icon_inactive=ICON_METER_ELECTRIC_OUTLINE,
+        icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
         key="smart_meter_request_allowed",
         translation_key="smart_meter_request_allowed",
-        icon=ICON_METER_ELECTRIC,
-        icon_inactive=ICON_METER_ELECTRIC_OUTLINE,
+        icon="mdi:meter-electric",
+        icon_inactive="mdi:meter-electric-outline",
         service_name=SERVICE_NAME_ELEKTRA,
     ),
     LianderBinaryEntityDescription(
@@ -191,14 +187,14 @@ BINARY_SENSOR_DESCRIPTIONS: list[LianderBinaryEntityDescription] = [
     LianderBinaryEntityDescription(
         key="gas_status",
         translation_key="gas_status",
-        icon=ICON_CHECK_CIRCLE,
+        icon="mdi:check-circle",
         icon_inactive="mdi:cancel",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderBinaryEntityDescription(
         key="gas_contract_active",
         translation_key="gas_contract_active",
-        icon=ICON_CHECK_CIRCLE,
+        icon="mdi:check-circle",
         icon_inactive="mdi:close-circle",
         service_name=SERVICE_NAME_GAS,
     ),
