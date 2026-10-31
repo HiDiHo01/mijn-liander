@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, EntityCategory, UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 def _parse_numeric_value(value: object) -> float | None:
     """Convert a finite API number or decimal-comma string to a float."""
     if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        return None
+    if isinstance(value, str) and "_" in value:
         return None
     try:
         number = float(value.replace(",", ".") if isinstance(value, str) else value)
@@ -277,6 +279,22 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
             return self._attributes.icon_inactive
         return self._attributes.icon
 
+    @property
+    def suggested_display_precision(self) -> int | None:
+        """Suggest one decimal when the raw maximum-power value contains a comma."""
+        if self.entity_description.key == "maximum_power":
+            raw_value = self._get_raw_value()
+            if isinstance(raw_value, str) and "," in raw_value:
+                return 1
+        return self.entity_description.suggested_display_precision
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Refresh the stored display default and publish updated coordinator data."""
+        if self.entity_description.key == "maximum_power" and self.registry_entry:
+            self._update_suggested_precision()
+        super()._handle_coordinator_update()
+
     def is_inactive(self) -> bool:
         """Return whether a known count or status indicates inactivity."""
         value = self.native_value
@@ -338,9 +356,8 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         }
         return meters[0].get(meter_fields[key]) if key in meter_fields else None
 
-    @property
-    def native_value(self) -> str | int | float | None:
-        """Return the current state of the sensor based on coordinator data."""
+    def _get_raw_value(self) -> str | int | float | None:
+        """Return the unconverted sensor value from coordinator data."""
         data = self.coordinator.data
 
         if not data:
@@ -375,7 +392,12 @@ class LianderSensor(CoordinatorEntity[LianderDataUpdateCoordinator], SensorEntit
         if connection is None:
             return None
 
-        value = self._get_connection_value(connection, self.entity_description.key)
+        return self._get_connection_value(connection, self.entity_description.key)
+
+    @property
+    def native_value(self) -> str | int | float | None:
+        """Return the sensor state, normalizing numeric API measurements."""
+        value = self._get_raw_value()
         if self.entity_description.native_unit_of_measurement is not None:
             return _parse_numeric_value(value)
         return value
