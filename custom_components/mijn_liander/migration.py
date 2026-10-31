@@ -74,6 +74,16 @@ def _process_single_entity_migration(
         else legacy_key
     )
     new_unique_id = f"{account_id}_{current_key}"
+    return _migrate_entity_preserving_id(registry, config_entry, entry, new_unique_id)
+
+
+def _migrate_entity_preserving_id(
+    registry: entity_registry.EntityRegistry,
+    config_entry: ConfigEntry,
+    entry: entity_registry.RegistryEntry,
+    new_unique_id: str,
+) -> bool:
+    """Update the unique ID or replace an owned duplicate, keeping the legacy ID."""
     existing_entity_id = registry.async_get_entity_id(
         entry.domain,
         entry.platform,

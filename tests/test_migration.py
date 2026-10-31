@@ -4,10 +4,13 @@ from dataclasses import dataclass
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
+
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.migration import (
     _migrate_electricity_device,
     _migrate_entity_unique_ids,
+    _process_single_entity_migration,
 )
 
 
@@ -588,3 +591,29 @@ def test_analog_cleanup_is_isolated_and_idempotent() -> None:
     _migrate_entity_unique_ids(registry, entry)
     _migrate_entity_unique_ids(registry, entry)
     assert set(registry.entities) == {item.entity_id for item in entries[2:]}
+
+
+@pytest.mark.parametrize("duplicate_missing", [True, False])
+def test_reject_missing_or_foreign_duplicate(duplicate_missing: bool) -> None:
+    """Reject unresolved and foreign duplicates without changing registry entries."""
+    legacy = FakeEntity("sensor.legacy", "account.address", "sensor", DOMAIN, "entry")
+    duplicate = FakeEntity("sensor.current", "account_address", "sensor", DOMAIN, "other")
+    registry = FakeEntityRegistry(legacy, duplicate)
+    config_entry = SimpleNamespace(unique_id="account", entry_id="entry")
+    with (
+        patch.object(
+            registry.entities,
+            "get_entry",
+            return_value=None if duplicate_missing else duplicate,
+        ),
+        patch.object(registry, "async_remove") as remove,
+        patch.object(registry, "async_update_entity") as update,
+    ):
+        assert not _process_single_entity_migration(
+            registry, config_entry, legacy, "account", "account.", "account_", set()
+        )
+    remove.assert_not_called()
+    update.assert_not_called()
+    assert registry.entities == {"sensor.legacy": legacy, "sensor.current": duplicate}
+    assert legacy.unique_id == "account.address"
+    assert duplicate.unique_id == "account_address"
