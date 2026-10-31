@@ -25,6 +25,11 @@ can only be configured once; capitalization and surrounding whitespace do not
 create a separate account. Re-authentication renews credentials for the existing
 account; add another integration entry to use a different email address.
 
+Use your Mijn Liander credentials in the login fields. The integration requests
+that automatic completion be disabled, but browsers and password managers can
+override this request. Check that suggested credentials belong to Mijn Liander
+before submitting the form.
+
 The generation and storage installation sensors use outlined icons when their
 count is zero and filled icons for positive counts. Unknown counts keep their
 default icon. This visual distinction applies to these two installation sensors.
