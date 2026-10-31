@@ -109,7 +109,6 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
 
         login_data = {"username": self._username, "password": self._password}
         timeout = aiohttp.ClientTimeout(total=10)
-        _LOGGER.debug("Request data: %s", login_data)
 
         try:
             async with (
@@ -229,7 +228,7 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
                     raise UpdateFailed("Service unavailable, token expired.")
                 data = await response.json()
 
-            _LOGGER.debug("Data fetched successfully from Liander API: %s", data)
+            _LOGGER.debug("Data fetched successfully from Liander API")
             return data
 
         except ContentTypeError:

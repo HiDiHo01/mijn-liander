@@ -158,7 +158,7 @@ class TestGasEntities:
             gas_data(False),
         )
 
-        assert len(sensors) == 17
+        assert len(sensors) == 21
         assert len(binary_sensors) == 12
 
         assert all(
@@ -186,7 +186,7 @@ class TestGasEntities:
 
         assert sum(
             item.service_name == SERVICE_NAME_GAS for item in sensors
-        ) == 7
+        ) == 9
         assert sum(
             item.service_name == SERVICE_NAME_GAS
             for item in binary_sensors

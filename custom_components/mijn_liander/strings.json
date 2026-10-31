@@ -115,6 +115,24 @@
       },
       "gas_number_of_registers": {
         "name": "Number of Gas Registers"
+      },
+      "generation_power": {
+        "name": "Installed generation power"
+      },
+      "solar_panel_power": {
+        "name": "Installed solar panel power"
+      },
+      "meter_type": {
+        "name": "Electricity meter type"
+      },
+      "contractless_cases": {
+        "name": "Electricity contractless cases"
+      },
+      "gas_meter_type": {
+        "name": "Gas meter type"
+      },
+      "gas_contractless_cases": {
+        "name": "Gas contractless cases"
       }
     },
     "binary_sensor": {
