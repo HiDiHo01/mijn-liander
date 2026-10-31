@@ -41,6 +41,9 @@ API value contains a comma, and zero decimals otherwise. This display default
 follows data updates and respects a display precision set by the user; it does not
 round the underlying measurement.
 
+Maximum gas capacity is a numeric sensor in cubic meters per hour (`m³/h`). It
+also accepts decimal commas and reports missing or invalid values as unknown.
+
 ## Manual installation
 
 1. Download the [latest version of this repository](https://github.com/HiDiHo01/mijn-liander/archive/refs/heads/main.zip).
