@@ -62,9 +62,16 @@ The feed-in start sensor is a timezone-aware timestamp.
 
 Binary sensors initialize from the first API payload and update through one
 coordinator listener. Explicit `false` remains off; absent/malformed flags are
-unknown. The API response does not supply an analog-meter flag, so that sensor
-remains unknown unless the API provides it. Binary attributes and debug logs no
+unknown. The deprecated analog-meter binary sensor is removed, including its
+existing registry entries. Binary attributes and debug logs no
 longer duplicate raw account payloads or login credentials.
+
+Registry migration uses Home Assistant's public entity-ID lookup. When both a
+legacy and current unique ID exist for the same account, the current entry keeps
+its entity ID, settings and device assignment; the redundant legacy entry is
+removed. Inactive gas cleanup recognizes owned gas unique IDs even when their
+device is missing or differs from the gas device. Entries from other config
+entries and devices with remaining entities are preserved.
 
 ## Manual installation
 
