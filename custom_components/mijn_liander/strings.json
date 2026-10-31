@@ -7,6 +7,7 @@
     },
     "error": {
       "invalid_auth": "The credentials were not accepted. Check your username and password.",
+      "wrong_account": "Sign in with the email address already configured for this account. To use another email address, add the integration again.",
       "forbidden": "Access forbidden. Check your account permissions.",
       "not_found": "Failed to connect to Mijn Liander endpoint.",
       "cannot_connect": "Failed to connect to Mijn Liander. Check your network connection.",
@@ -28,7 +29,7 @@
           "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds)."
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "title": "Re-authenticate with Mijn Liander",
         "data": {
           "username": "Email",
