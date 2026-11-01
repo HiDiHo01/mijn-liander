@@ -26,17 +26,20 @@
           "timeout": "Timeout"
         },
         "data_description": {
+          "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
           "timeout": "Verbindingstime-out in seconden voor verzoeken naar Mijn Liander (1-30 seconden)."
         }
       },
       "reauth_confirm": {
         "title": "Opnieuw inloggen bij Mijn Liander",
+        "description": "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen.",
         "data": {
           "username": "Email",
           "password": "Wachtwoord",
           "timeout": "Timeout"
         },
         "data_description": {
+          "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
           "timeout": "Verbindingstime-out in seconden voor verzoeken naar Mijn Liander (1-30 seconden)."
         }
       }
