@@ -141,6 +141,30 @@ class TestConfigFlowErrors(unittest.TestCase):
         self.assertEqual(suggested_values.get("username"), "existing_user@example.com")
         self.assertEqual(suggested_values.get("timeout"), 10)
 
+    def test_config_step_descriptions_and_data_descriptions(self) -> None:
+        """Config flow steps define helpful descriptions and field guidance."""
+        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
+        locales = {
+            lang: json.loads(
+                (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
+            )
+            for lang in ("en", "nl")
+        }
+
+        self.assertEqual(source["config"]["step"], locales["en"]["config"]["step"])
+
+        for lang, locale in locales.items():
+            for step_id in ("user", "reauth_confirm"):
+                with self.subTest(lang=lang, step=step_id):
+                    step = locale["config"]["step"][step_id]
+                    self.assertIn("description", step)
+                    self.assertTrue(step["description"])
+                    data_desc = step.get("data_description", {})
+                    self.assertIn("username", data_desc)
+                    self.assertTrue(data_desc["username"])
+                    self.assertIn("timeout", data_desc)
+                    self.assertTrue(data_desc["timeout"])
+
 
 if __name__ == "__main__":
     unittest.main()
