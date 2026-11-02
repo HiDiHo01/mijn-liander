@@ -11,6 +11,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -28,15 +31,26 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
         ),
-        vol.Optional("timeout", default=5): vol.All(
-            cv.positive_int, vol.Range(min=1, max=30)
+        vol.Optional("timeout", default=5): NumberSelector(
+            NumberSelectorConfig(
+                min=1,
+                max=30,
+                step=1,
+                mode=NumberSelectorMode.BOX,
+                unit_of_measurement="s",
+            )
         ),
     }
 )
 
-# Keep UI selector metadata while retaining the email validation used by both flows.
+# Keep UI selector metadata while retaining backend validation used by both flows.
 _LOGIN_DATA_SCHEMA = STEP_USER_DATA_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): vol.All(cv.string, vol.Strip, vol.Email())}
+    {
+        vol.Required(CONF_USERNAME): vol.All(cv.string, vol.Strip, vol.Email()),
+        vol.Optional("timeout", default=5): vol.All(
+            cv.positive_int, vol.Range(min=1, max=30)
+        ),
+    }
 )
 
 

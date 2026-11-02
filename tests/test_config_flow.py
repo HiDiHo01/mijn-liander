@@ -11,9 +11,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.selector import TextSelector, TextSelectorType
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorType,
+)
 
 from custom_components.mijn_liander.config_flow import (
+    _LOGIN_DATA_SCHEMA,
     STEP_USER_DATA_SCHEMA,
     ConfigFlow,
     _map_http_error,
@@ -103,6 +109,22 @@ class TestConfigFlowErrors(unittest.TestCase):
                 self.assertEqual(selector.config.get("type"), selector_type)
                 self.assertEqual(selector.config.get("autocomplete"), "off")
 
+    def test_schema_timeout_selector_configured(self) -> None:
+        """Timeout schema field uses NumberSelector with bounds, step, box mode, and unit."""
+        timeout_selector = None
+        for key, val in STEP_USER_DATA_SCHEMA.schema.items():
+            if getattr(key, "schema", key) == "timeout":
+                timeout_selector = val
+                break
+
+        self.assertIsNotNone(timeout_selector)
+        self.assertIsInstance(timeout_selector, NumberSelector)
+        self.assertEqual(timeout_selector.config.get("min"), 1)
+        self.assertEqual(timeout_selector.config.get("max"), 30)
+        self.assertEqual(timeout_selector.config.get("step"), 1)
+        self.assertEqual(timeout_selector.config.get("mode"), NumberSelectorMode.BOX)
+        self.assertEqual(timeout_selector.config.get("unit_of_measurement"), "s")
+
     def test_schema_username_rejects_non_strings(self) -> None:
         """Reject non-string usernames in the UI schema before authentication."""
         for invalid_username in (42, None, [], {}, True):
@@ -112,6 +134,20 @@ class TestConfigFlowErrors(unittest.TestCase):
             ):
                 STEP_USER_DATA_SCHEMA(
                     {"username": invalid_username, "password": "test-password"}
+                )
+
+    def test_login_data_schema_validates_timeout_bounds(self) -> None:
+        """Validate timeout constraints in _LOGIN_DATA_SCHEMA backend validation."""
+        valid_data = {"username": "user@example.com", "password": "password", "timeout": 15}
+        self.assertEqual(_LOGIN_DATA_SCHEMA(valid_data)["timeout"], 15)
+
+        for invalid_timeout in (0, 31, -5, "invalid"):
+            with (
+                self.subTest(timeout=invalid_timeout),
+                self.assertRaises(vol.Invalid),
+            ):
+                _LOGIN_DATA_SCHEMA(
+                    {"username": "user@example.com", "password": "password", "timeout": invalid_timeout}
                 )
 
     def test_reauth_step_prefills_suggested_values(self) -> None:
