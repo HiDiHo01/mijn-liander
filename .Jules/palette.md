@@ -9,3 +9,7 @@
 ## 2026-10-31 - External service credential autocomplete
 **Learning:** Typed email/password selectors can request `autocomplete="off"` without advertising origin-login autofill. Browsers and password managers can override this hint, so it does not provide credential isolation.
 **Action:** Follow the detailed credential-selector guidance in [AGENTS.md](../AGENTS.md), including its browser-override limitation.
+
+## 2026-11-01 - Config Flow Numeric Selectors
+**Learning:** Using raw Voluptuous integer validators in Home Assistant config flow schemas renders generic unassisted text inputs. Providing a typed `NumberSelector` with `min`, `max`, `step`, `unit_of_measurement`, and `NumberSelectorMode.BOX` provides immediate visual bounds, proper units, and spin controls in the UI while retaining backend schema validation.
+**Action:** Declare `NumberSelector` for numeric parameters in config and options flows, specifying `min`, `max`, `step`, and `unit_of_measurement` to guide users with clear limits and units.
