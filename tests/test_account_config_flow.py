@@ -9,7 +9,12 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.selector import TextSelector, TextSelectorType
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorType,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mijn_liander.config_flow import _validate_input
@@ -101,6 +106,14 @@ async def test_credential_forms_keep_autocomplete_metadata(
         assert isinstance(selector, TextSelector)
         assert selector.config.get("type") == selector_type
         assert selector.config.get("autocomplete") == "off"
+
+    timeout_selector = result["data_schema"].schema["timeout"]
+    assert isinstance(timeout_selector, NumberSelector)
+    assert timeout_selector.config.get("min") == 1
+    assert timeout_selector.config.get("max") == 30
+    assert timeout_selector.config.get("step") == 1
+    assert timeout_selector.config.get("unit_of_measurement") == "s"
+    assert timeout_selector.config.get("mode") == NumberSelectorMode.BOX
     authentication.assert_not_awaited()
 
 

@@ -11,9 +11,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.selector import TextSelector, TextSelectorType
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorType,
+)
 
 from custom_components.mijn_liander.config_flow import (
+    _LOGIN_DATA_SCHEMA,
     STEP_USER_DATA_SCHEMA,
     ConfigFlow,
     _map_http_error,
@@ -113,6 +119,34 @@ class TestConfigFlowErrors(unittest.TestCase):
                 STEP_USER_DATA_SCHEMA(
                     {"username": invalid_username, "password": "test-password"}
                 )
+
+    def test_schema_timeout_selector_configuration(self) -> None:
+        """Verify timeout schema field uses NumberSelector configured with unit and range."""
+        timeout_selector = None
+        for key, val in STEP_USER_DATA_SCHEMA.schema.items():
+            if getattr(key, "schema", key) == "timeout":
+                timeout_selector = val
+                break
+
+        self.assertIsNotNone(timeout_selector)
+        self.assertIsInstance(timeout_selector, NumberSelector)
+        self.assertEqual(timeout_selector.config.get("min"), 1)
+        self.assertEqual(timeout_selector.config.get("max"), 30)
+        self.assertEqual(timeout_selector.config.get("step"), 1)
+        self.assertEqual(timeout_selector.config.get("unit_of_measurement"), "s")
+        self.assertEqual(timeout_selector.config.get("mode"), NumberSelectorMode.BOX)
+
+    def test_login_data_schema_validates_and_casts_timeout(self) -> None:
+        """Verify _LOGIN_DATA_SCHEMA converts float/int timeout to positive int."""
+        valid_data = _LOGIN_DATA_SCHEMA(
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "test-password",
+                "timeout": 15.0,
+            }
+        )
+        self.assertEqual(valid_data["timeout"], 15)
+        self.assertIsInstance(valid_data["timeout"], int)
 
     def test_reauth_step_prefills_suggested_values(self) -> None:
         """Re-authentication flow form contains suggested values from existing config entry."""
