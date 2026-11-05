@@ -155,37 +155,30 @@ class TestConfigFlowErrors(unittest.TestCase):
 
         expected_guidance = {
             "en": {
+                "reauth_description": "Re-authenticate your Mijn Liander account to restore the connection.",
                 "username": "The email address associated with your Mijn Liander account.",
-                "reauth_description": (
-                    "Re-authenticate your Mijn Liander account to restore the connection."
-                ),
+                "timeout": "Connection timeout in seconds for requests to Mijn Liander (1-30 seconds).",
             },
             "nl": {
+                "reauth_description": "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen.",
                 "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
-                "reauth_description": (
-                    "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen."
-                ),
+                "timeout": "Verbindingstime-out in seconden voor verzoeken naar Mijn Liander (1-30 seconden).",
             },
         }
 
         for lang, locale in locales.items():
+            expected = expected_guidance[lang]
+            reauth_step = locale["config"]["step"]["reauth_confirm"]
+            self.assertEqual(
+                reauth_step.get("description"), expected["reauth_description"]
+            )
             for step_id in ("user", "reauth_confirm"):
                 with self.subTest(lang=lang, step=step_id):
-                    step = locale["config"]["step"][step_id]
-                    self.assertIn("description", step)
-                    self.assertTrue(step["description"])
-                    data_desc = step.get("data_description", {})
-                    self.assertIn("username", data_desc)
-                    self.assertEqual(
-                        data_desc["username"], expected_guidance[lang]["username"]
+                    data_desc = locale["config"]["step"][step_id].get(
+                        "data_description", {}
                     )
-                    if step_id == "reauth_confirm":
-                        self.assertEqual(
-                            step["description"],
-                            expected_guidance[lang]["reauth_description"],
-                        )
-                    self.assertIn("timeout", data_desc)
-                    self.assertTrue(data_desc["timeout"])
+                    self.assertEqual(data_desc.get("username"), expected["username"])
+                    self.assertEqual(data_desc.get("timeout"), expected["timeout"])
 
 
 if __name__ == "__main__":
