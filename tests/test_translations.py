@@ -176,6 +176,29 @@ class EntityTranslationTests(unittest.TestCase):
         for desc in BINARY_SENSOR_DESCRIPTIONS:
             self.assertIsNotNone(desc.icon_inactive, f"Missing icon_inactive for binary sensor {desc.key}")
 
+    def test_sensor_descriptions_use_valid_icons(self) -> None:
+        """Validate sensor description icons against the pinned upstream MDI catalog."""
+        catalog_path = Path(__file__).parent / "fixtures" / "mdi_catalog.json"
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+        icon_names = set(catalog["names"])
+
+        for description in SENSOR_DESCRIPTIONS:
+            with self.subTest(key=description.key):
+                self.assertIsNotNone(description.icon, f"Missing icon for sensor {description.key}")
+                self.assertTrue(description.icon.startswith("mdi:"))
+                self.assertIn(
+                    description.icon.removeprefix("mdi:"),
+                    icon_names,
+                    f"Unknown MDI icon for {description.key}: {description.icon}",
+                )
+                if description.icon_inactive is not None:
+                    self.assertTrue(description.icon_inactive.startswith("mdi:"))
+                    self.assertIn(
+                        description.icon_inactive.removeprefix("mdi:"),
+                        icon_names,
+                        f"Unknown inactive MDI icon for {description.key}: {description.icon_inactive}",
+                    )
+
 
 if __name__ == "__main__":
     unittest.main()
