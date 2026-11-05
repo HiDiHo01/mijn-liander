@@ -153,6 +153,21 @@ class TestConfigFlowErrors(unittest.TestCase):
 
         self.assertEqual(source["config"]["step"], locales["en"]["config"]["step"])
 
+        expected_guidance = {
+            "en": {
+                "username": "The email address associated with your Mijn Liander account.",
+                "reauth_description": (
+                    "Re-authenticate your Mijn Liander account to restore the connection."
+                ),
+            },
+            "nl": {
+                "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
+                "reauth_description": (
+                    "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen."
+                ),
+            },
+        }
+
         for lang, locale in locales.items():
             for step_id in ("user", "reauth_confirm"):
                 with self.subTest(lang=lang, step=step_id):
@@ -161,7 +176,14 @@ class TestConfigFlowErrors(unittest.TestCase):
                     self.assertTrue(step["description"])
                     data_desc = step.get("data_description", {})
                     self.assertIn("username", data_desc)
-                    self.assertTrue(data_desc["username"])
+                    self.assertEqual(
+                        data_desc["username"], expected_guidance[lang]["username"]
+                    )
+                    if step_id == "reauth_confirm":
+                        self.assertEqual(
+                            step["description"],
+                            expected_guidance[lang]["reauth_description"],
+                        )
                     self.assertIn("timeout", data_desc)
                     self.assertTrue(data_desc["timeout"])
 
