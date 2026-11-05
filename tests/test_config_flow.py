@@ -177,6 +177,52 @@ class TestConfigFlowErrors(unittest.TestCase):
         self.assertEqual(suggested_values.get("username"), "existing_user@example.com")
         self.assertEqual(suggested_values.get("timeout"), 10)
 
+    def test_config_step_descriptions_and_data_descriptions(self) -> None:
+        """Config flow steps define helpful descriptions and field guidance."""
+        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
+        locales = {
+            lang: json.loads(
+                (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
+            )
+            for lang in ("en", "nl")
+        }
+
+        self.assertEqual(source["config"]["step"], locales["en"]["config"]["step"])
+
+        expected_guidance = {
+            "en": {
+                "username": "The email address associated with your Mijn Liander account.",
+                "reauth_description": (
+                    "Re-authenticate your Mijn Liander account to restore the connection."
+                ),
+            },
+            "nl": {
+                "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
+                "reauth_description": (
+                    "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen."
+                ),
+            },
+        }
+
+        for lang, locale in locales.items():
+            for step_id in ("user", "reauth_confirm"):
+                with self.subTest(lang=lang, step=step_id):
+                    step = locale["config"]["step"][step_id]
+                    self.assertIn("description", step)
+                    self.assertTrue(step["description"])
+                    data_desc = step.get("data_description", {})
+                    self.assertIn("username", data_desc)
+                    self.assertEqual(
+                        data_desc["username"], expected_guidance[lang]["username"]
+                    )
+                    if step_id == "reauth_confirm":
+                        self.assertEqual(
+                            step["description"],
+                            expected_guidance[lang]["reauth_description"],
+                        )
+                    self.assertIn("timeout", data_desc)
+                    self.assertTrue(data_desc["timeout"])
+
 
 if __name__ == "__main__":
     unittest.main()
