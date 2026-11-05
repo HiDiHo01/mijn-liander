@@ -173,26 +173,31 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="postal_code",
         translation_key="postal_code",
+        icon="mdi:mailbox-outline",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
         key="street",
         translation_key="street",
+        icon="mdi:road",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
         key="house_number",
         translation_key="house_number",
+        icon="mdi:numeric",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
         key="house_number_addition",
         translation_key="house_number_addition",
+        icon="mdi:sign-direction",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
         key="city",
         translation_key="city",
+        icon="mdi:city",
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
@@ -264,16 +269,24 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         translation_key="generation_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        icon="mdi:solar-power",
     ),
     LianderSensorEntityDescription(
         key="solar_panel_power",
         translation_key="solar_panel_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        icon="mdi:solar-panel-large",
     ),
-    LianderSensorEntityDescription(key="meter_type", translation_key="meter_type"),
     LianderSensorEntityDescription(
-        key="contractless_cases", translation_key="contractless_cases"
+        key="meter_type",
+        translation_key="meter_type",
+        icon="mdi:meter-electric",
+    ),
+    LianderSensorEntityDescription(
+        key="contractless_cases",
+        translation_key="contractless_cases",
+        icon="mdi:file-document-alert-outline",
     ),
     LianderSensorEntityDescription(
         key="gas_ean",
@@ -325,11 +338,13 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="gas_meter_type",
         translation_key="gas_meter_type",
+        icon="mdi:meter-gas",
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_contractless_cases",
         translation_key="gas_contractless_cases",
+        icon="mdi:file-document-alert-outline",
         service_name=SERVICE_NAME_GAS,
     ),
 ]
