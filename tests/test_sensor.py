@@ -225,7 +225,23 @@ def test_maximum_power_precision_is_per_entity() -> None:
     assert decimal_sensor.native_value == pytest.approx(8.125)
     assert integer_sensor.suggested_display_precision == 0
     assert integer_sensor.entity_description.suggested_display_precision == 0
-    assert costs_sensor.suggested_display_precision is None
+    assert costs_sensor.suggested_display_precision == 2
+
+
+@pytest.mark.parametrize(
+    ("sensor_key", "connection_type"),
+    [
+        ("network_costs", "elektra"),
+        ("gas_network_costs", "gas"),
+    ],
+)
+def test_monetary_sensors_have_two_decimal_display_precision(
+    sensor_key: str, connection_type: str
+) -> None:
+    """Monetary network cost sensors suggest 2 decimals for currency display."""
+    sensor = _make_connection_sensor(sensor_key, connection_type, "netwerkkosten", "12,50")
+    assert sensor.device_class is SensorDeviceClass.MONETARY
+    assert sensor.suggested_display_precision == 2
 
 
 @pytest.mark.parametrize("user_precision", [None, 3])

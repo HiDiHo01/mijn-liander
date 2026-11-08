@@ -13,3 +13,7 @@
 ## 2026-11-01 - Config Flow Numeric Selectors
 **Learning:** Using raw Voluptuous integer validators in Home Assistant config flow schemas renders generic unassisted text inputs. Providing a typed `NumberSelector` with `min`, `max`, `step`, `unit_of_measurement`, and `NumberSelectorMode.BOX` provides immediate visual bounds, proper units, and spin controls in the UI while retaining backend schema validation.
 **Action:** Declare `NumberSelector` for numeric parameters in config and options flows, specifying `min`, `max`, `step`, and `unit_of_measurement` to guide users with clear limits and units.
+
+## 2026-11-02 - Monetary Sensor Display Precision
+**Learning:** Home Assistant does not define a default unit precision for `SensorDeviceClass.MONETARY`. Without an explicit `suggested_display_precision`, currency sensors can render trailing floating-point inaccuracies or unformatted decimal lengths in frontend entity cards and dashboards.
+**Action:** Explicitly set `suggested_display_precision=2` on `SensorDeviceClass.MONETARY` entity descriptions so currency values display cleanly and consistently with two decimal places.
