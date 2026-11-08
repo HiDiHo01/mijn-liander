@@ -218,6 +218,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         translation_key="network_costs",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
+        suggested_display_precision=2,
         icon="mdi:currency-eur",
     ),
     LianderSensorEntityDescription(
@@ -308,6 +309,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
         translation_key="gas_network_costs",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_EURO,
+        suggested_display_precision=2,
         icon="mdi:currency-eur",
         service_name=SERVICE_NAME_GAS,
     ),
