@@ -41,6 +41,9 @@ from .gas import filter_entity_descriptions
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON_COUNTER = "mdi:counter"
+ICON_NUMERIC = "mdi:numeric"
+
 ADDRESS_FIELDS: dict[str, str] = {
     "postal_code": "postcode",
     "street": "straat",
@@ -185,7 +188,7 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="house_number",
         translation_key="house_number",
-        icon="mdi:numeric",
+        icon=ICON_NUMERIC,
         service_name=SERVICE_NAME_USER,
     ),
     LianderSensorEntityDescription(
@@ -230,17 +233,17 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="number_of_meters",
         translation_key="number_of_meters",
-        icon="mdi:counter",
+        icon=ICON_COUNTER,
     ),
     LianderSensorEntityDescription(
         key="meter_number",
         translation_key="meter_number",
-        icon="mdi:numeric",
+        icon=ICON_NUMERIC,
     ),
     LianderSensorEntityDescription(
         key="number_of_registers",
         translation_key="number_of_registers",
-        icon="mdi:counter",
+        icon=ICON_COUNTER,
     ),
     LianderSensorEntityDescription(
         key="number_of_phases",
@@ -322,19 +325,19 @@ SENSOR_DESCRIPTIONS: list[LianderSensorEntityDescription] = [
     LianderSensorEntityDescription(
         key="gas_number_of_meters",
         translation_key="gas_number_of_meters",
-        icon="mdi:counter",
+        icon=ICON_COUNTER,
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_meter_number",
         translation_key="gas_meter_number",
-        icon="mdi:numeric",
+        icon=ICON_NUMERIC,
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
         key="gas_number_of_registers",
         translation_key="gas_number_of_registers",
-        icon="mdi:counter",
+        icon=ICON_COUNTER,
         service_name=SERVICE_NAME_GAS,
     ),
     LianderSensorEntityDescription(
