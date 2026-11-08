@@ -55,6 +55,14 @@ These instructions apply to the entire repository. More specific `AGENTS.md` fil
 - Recheck comments after revisions and resolve a thread only after its concern has been addressed.
 - Keep pull requests focused and describe behavior changes, tests, and any remaining limitations.
 
+### Check for obsolete pull requests before resolving conflicts
+
+- Before resolving merge/rebase conflicts, rebasing, or rewriting a pull request, compare its complete changes against the **current** target branch. Inspect the PR diff, relevant code, tests, documentation, review feedback, and commit history.
+- Verify whether **all** meaningful functionality, bug fixes, regression coverage, and documentation changes are already present on the target branch with equivalent behavior. Similar code, a matching PR title, or a conflict flag alone is not sufficient evidence.
+- If the pull request is fully superseded, **do not resolve conflicts or merge duplicate changes**. Post a concise explanation citing the replacement commit(s), relevant files, and existing tests; close the PR as obsolete **without merging**, when its closure is authorized by the user. Preserve the existing branch history.
+- If any meaningful change is missing or equivalence cannot be established, keep the PR open and resolve conflicts while preserving its unique changes. Run the relevant verification checks and report their actual results.
+- Document the disposition and any checks that were not run. Never claim an obsolete PR was merged, or that tests passed when they were not executed.
+
 ### When GitHub reports `rebaseable: false`
 
 - Check `rebaseable` separately from `mergeable`: `mergeable: true` does not prove that GitHub can rebase the branch. Fetch the latest pull-request head and target branch before diagnosing the conflict.
