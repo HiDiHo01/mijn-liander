@@ -32,7 +32,7 @@
       },
       "reauth_confirm": {
         "title": "Re-authenticate with Mijn Liander",
-        "description": "Re-authenticate your Mijn Liander account to restore the connection.",
+        "description": "Re-authenticate your Mijn Liander account for {account} to restore the connection.",
         "data": {
           "username": "Email",
           "password": "Password",
