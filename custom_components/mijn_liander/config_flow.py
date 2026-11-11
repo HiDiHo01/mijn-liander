@@ -244,8 +244,11 @@ class ConfigFlow(config_entries.ConfigFlow):
         data_schema = self.add_suggested_values_to_schema(
             STEP_USER_DATA_SCHEMA, entry.data
         )
+        stored_username = entry.data.get(CONF_USERNAME, entry.unique_id)
+        account_name = stored_username if isinstance(stored_username, str) else entry.title
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
+            description_placeholders={"account": account_name},
         )

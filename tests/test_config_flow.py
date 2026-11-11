@@ -167,6 +167,10 @@ class TestConfigFlowErrors(unittest.TestCase):
 
         self.assertEqual(result["type"], "form")
         self.assertEqual(result["step_id"], "reauth_confirm")
+        self.assertEqual(
+            result["description_placeholders"],
+            {"account": "existing_user@example.com"},
+        )
 
         schema = result["data_schema"]
         suggested_values = {
@@ -193,13 +197,13 @@ class TestConfigFlowErrors(unittest.TestCase):
             "en": {
                 "username": "The email address associated with your Mijn Liander account.",
                 "reauth_description": (
-                    "Re-authenticate your Mijn Liander account to restore the connection."
+                    "Re-authenticate your Mijn Liander account for {account} to restore the connection."
                 ),
             },
             "nl": {
                 "username": "Het e-mailadres dat is gekoppeld aan uw Mijn Liander-account.",
                 "reauth_description": (
-                    "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen."
+                    "Verifieer uw Mijn Liander-account voor {account} opnieuw om de verbinding te herstellen."
                 ),
             },
         }

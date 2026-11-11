@@ -32,7 +32,7 @@
       },
       "reauth_confirm": {
         "title": "Opnieuw inloggen bij Mijn Liander",
-        "description": "Verifieer uw Mijn Liander-account opnieuw om de verbinding te herstellen.",
+        "description": "Verifieer uw Mijn Liander-account voor {account} opnieuw om de verbinding te herstellen.",
         "data": {
           "username": "Email",
           "password": "Wachtwoord",
