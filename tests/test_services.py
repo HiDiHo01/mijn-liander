@@ -2,18 +2,22 @@
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.mijn_liander import async_setup
 from custom_components.mijn_liander.const import DOMAIN
 from custom_components.mijn_liander.services import SERVICE_REMOVE_GROUP
 
 
-async def test_remove_group_only_removes_selected_group(hass, config_entry) -> None:
+async def test_remove_group_only_removes_selected_group(hass) -> None:
     """Remove selected group entities without touching another group or integration."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
     config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other", unique_id="other")
+    other_entry.add_to_hass(hass)
+
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
-
     gas_device = devices.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{config_entry.entry_id}_Gas")},
@@ -38,8 +42,15 @@ async def test_remove_group_only_removes_selected_group(hass, config_entry) -> N
         config_entry=config_entry,
         device_id=electricity_device.id,
     )
+    foreign_entity = entities.async_get_or_create(
+        "sensor",
+        "other",
+        "foreign_sensor",
+        config_entry=other_entry,
+    )
 
-    await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup(hass, {})
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REMOVE_GROUP,
@@ -49,5 +60,6 @@ async def test_remove_group_only_removes_selected_group(hass, config_entry) -> N
 
     assert entities.async_get(gas_entity.entity_id) is None
     assert entities.async_get(electricity_entity.entity_id) is not None
+    assert entities.async_get(foreign_entity.entity_id) is not None
     assert devices.async_get(gas_device.id) is None
     assert devices.async_get(electricity_device.id) is not None
