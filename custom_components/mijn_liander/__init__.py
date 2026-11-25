@@ -8,6 +8,7 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import LianderDataUpdateCoordinator
 from .gas import has_active_gas_contract
 from .migration import async_migrate_registry, remove_inactive_gas_registry_entries
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +30,12 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
 
     # await coordinator.async_refresh()  # Initial fetch to populate data
     return coordinator
+
+
+async def async_setup(hass: HomeAssistant, config: dict[str, object]) -> bool:
+    """Register integration-wide services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
