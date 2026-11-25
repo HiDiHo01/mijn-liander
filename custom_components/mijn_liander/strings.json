@@ -188,5 +188,17 @@
         "name": "Gas Smart Meter"
       }
     }
+  },
+  "services": {
+    "remove_group": {
+      "name": "Remove group",
+      "description": "Remove a complete Mijn Liander group and its entities from Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "Group",
+          "description": "Select the Elektra, Gebruiker, or Gas group to remove."
+        }
+      }
+    }
   }
 }

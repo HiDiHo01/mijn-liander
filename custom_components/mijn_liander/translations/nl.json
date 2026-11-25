@@ -188,5 +188,17 @@
         "name": "Slimme gasmeter"
       }
     }
+  },
+  "services": {
+    "remove_group": {
+      "name": "Groep verwijderen",
+      "description": "Verwijder een volledige Mijn Liander-groep en de bijbehorende entiteiten uit Home Assistant.",
+      "fields": {
+        "device_id": {
+          "name": "Groep",
+          "description": "Selecteer de groep Elektra, Gebruiker of Gas die u wilt verwijderen."
+        }
+      }
+    }
   }
 }
