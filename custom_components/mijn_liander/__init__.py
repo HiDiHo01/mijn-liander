@@ -4,7 +4,13 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
+from .const import (
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_NAME_ELEKTRA,
+    SERVICE_NAME_GAS,
+    SERVICE_NAME_USER,
+)
 from .coordinator import LianderDataUpdateCoordinator
 from .gas import has_active_gas_contract
 from .migration import async_migrate_registry, remove_inactive_gas_registry_entries
@@ -32,10 +38,30 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
     return coordinator
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, object]) -> bool:
-    """Register integration-wide services."""
-    async_setup_services(hass)
-    return True
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removal of Mijn Liander service-group devices from Home Assistant."""
+    if device_entry.config_entry_id != config_entry.entry_id:
+        return False
+
+    group_name = device_entry.model
+    if group_name not in {
+        SERVICE_NAME_ELEKTRA,
+        SERVICE_NAME_USER,
+        SERVICE_NAME_GAS,
+    }:
+        return False
+
+    expected_identifier = (
+        config_entry.entry_id
+        if group_name == SERVICE_NAME_ELEKTRA
+        else f"{config_entry.entry_id}_{group_name}"
+    )
+    return (DOMAIN, expected_identifier) in device_entry.identifiers
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
