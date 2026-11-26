@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     DOMAIN,
@@ -14,7 +15,6 @@ from .const import (
 from .coordinator import LianderDataUpdateCoordinator
 from .gas import has_active_gas_contract
 from .migration import async_migrate_registry, remove_inactive_gas_registry_entries
-from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
 
     # await coordinator.async_refresh()  # Initial fetch to populate data
     return coordinator
-
 
 
 async def async_remove_config_entry_device(
