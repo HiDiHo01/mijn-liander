@@ -1,6 +1,9 @@
 {
     "domain": "mijn_liander",
     "name": "Mijn Liander",
+    "categories": [
+        "energy.meters_monitoring"
+    ],
     "codeowners": [
         "@HiDiHo01"
     ],
@@ -12,8 +15,5 @@
         "mijn_liander"
     ],
     "requirements": [],
-    "version": "2026.11.26",
-    "categories": [
-        "energy.meters_monitoring"
-    ]
+    "version": "2026.11.26"
 }
