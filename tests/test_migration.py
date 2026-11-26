@@ -16,6 +16,7 @@ from custom_components.mijn_liander.migration import (
     _migrate_electricity_device,
     _migrate_entity_unique_ids,
     _process_single_entity_migration,
+    async_migrate_registry,
     remove_inactive_gas_registry_entries,
 )
 
@@ -876,3 +877,66 @@ async def test_inactive_gas_cleanup_removes_dotted_ids_without_prior_migration(
     remove_inactive_gas_registry_entries(hass, config_entry)
 
     assert registry.async_get(legacy.entity_id) is None
+
+
+
+async def test_one_time_cleanup_removes_only_empty_owned_service_groups(
+    hass: HomeAssistant,
+) -> None:
+    """Remove the three empty owned groups once and preserve non-empty/foreign devices."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
+    config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other-account")
+    other_entry.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    group_identifiers = {
+        "Elektra": (DOMAIN, config_entry.entry_id, None),
+        "Gebruiker": (DOMAIN, f"{config_entry.entry_id}_Gebruiker"),
+        "Gas": (DOMAIN, f"{config_entry.entry_id}_Gas"),
+    }
+    empty_devices = {
+        group_name: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={identifier},
+            model=group_name,
+        )
+        for group_name, identifier in group_identifiers.items()
+    }
+    retained_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}_Gebruiker")},
+        model="Gebruiker",
+        name="Gebruiker with entity",
+    )
+    retained_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "account_test_entity",
+        config_entry=config_entry,
+        device_id=retained_device.id,
+    )
+    foreign_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, f"{other_entry.entry_id}_Gas")},
+        model="Gas",
+    )
+
+    await async_migrate_registry(hass, config_entry)
+
+    for device in empty_devices.values():
+        assert device_registry.async_get(device.id) is None
+    assert device_registry.async_get(retained_device.id) is not None
+    assert entity_registry.async_get(retained_entity.entity_id) is not None
+    assert device_registry.async_get(foreign_device.id) is not None
+
+    # A second migration must not run the one-time cleanup again.
+    later_empty_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}_Gas")},
+        model="Gas",
+        name="Gas created after migration",
+    )
+    await async_migrate_registry(hass, config_entry)
+    assert device_registry.async_get(later_empty_device.id) is not None
