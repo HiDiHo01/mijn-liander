@@ -906,9 +906,9 @@ async def test_one_time_cleanup_removes_only_empty_owned_service_groups(
     }
     retained_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, f"{config_entry.entry_id}_Gebruiker")},
-        model="Gebruiker",
-        name="Gebruiker with entity",
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        model="Elektra",
+        name="Elektra with entity",
     )
     retained_entity = entity_registry.async_get_or_create(
         "sensor",
