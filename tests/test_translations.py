@@ -24,7 +24,7 @@ class EntityTranslationTests(unittest.TestCase):
     """Verify entity names use the integration's translation catalogs."""
 
     def test_entity_descriptions_use_translated_names(self) -> None:
-        """Every entity description has a name in the source and locales."""
+        """Every entity description has a name in both locale catalogs."""
         descriptions = {
             "sensor": SENSOR_DESCRIPTIONS,
             "binary_sensor": BINARY_SENSOR_DESCRIPTIONS,
@@ -51,7 +51,7 @@ class EntityTranslationTests(unittest.TestCase):
                         self.assertNotIn("description", translated)
 
     def test_locales_have_matching_entity_translation_keys(self) -> None:
-        """Every locale has the same entity translation keys as the source."""
+        """Every locale has the same entity translation keys as the English catalog."""
         locales = {
             language: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{language}.json").read_text()
@@ -60,11 +60,11 @@ class EntityTranslationTests(unittest.TestCase):
         }
 
         english_entities = locales["en"]["entity"]
-        for domain, source_entities in english_entities.items():
+        for domain, english_domain_entities in english_entities.items():
             for language, catalog in locales.items():
                 with self.subTest(domain=domain, language=language):
                     self.assertEqual(
-                        set(source_entities),
+                        set(english_domain_entities),
                         set(catalog["entity"][domain]),
                     )
 
