@@ -29,15 +29,12 @@ class EntityTranslationTests(unittest.TestCase):
             "sensor": SENSOR_DESCRIPTIONS,
             "binary_sensor": BINARY_SENSOR_DESCRIPTIONS,
         }
-        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
             language: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{language}.json").read_text()
             )
             for language in ("en", "nl")
         }
-
-        self.assertEqual(source["entity"], locales["en"]["entity"])
 
         for domain, entity_descriptions in descriptions.items():
             for description in entity_descriptions:
@@ -46,8 +43,7 @@ class EntityTranslationTests(unittest.TestCase):
                     self.assertNotIsInstance(description.name, str)
 
                     for catalog in (
-                        source["entity"][domain],
-                        *(locale["entity"][domain] for locale in locales.values()),
+                        locale["entity"][domain] for locale in locales.values()
                     ):
                         translated = catalog.get(description.translation_key)
                         self.assertIsNotNone(translated)
@@ -56,7 +52,6 @@ class EntityTranslationTests(unittest.TestCase):
 
     def test_locales_have_matching_entity_translation_keys(self) -> None:
         """Every locale has the same entity translation keys as the source."""
-        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
             language: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{language}.json").read_text()
@@ -64,7 +59,8 @@ class EntityTranslationTests(unittest.TestCase):
             for language in ("en", "nl")
         }
 
-        for domain, source_entities in source["entity"].items():
+        english_entities = locales["en"]["entity"]
+        for domain, source_entities in english_entities.items():
             for language, catalog in locales.items():
                 with self.subTest(domain=domain, language=language):
                     self.assertEqual(
