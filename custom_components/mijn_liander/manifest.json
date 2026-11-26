@@ -12,5 +12,8 @@
         "mijn_liander"
     ],
     "requirements": [],
-    "version": "2026.10.7"
+    "version": "2026.11.26",
+    "categories": [
+        "energy.meters_monitoring"
+    ]
 }
