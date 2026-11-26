@@ -3,8 +3,9 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SERVICE_NAME_GAS, SERVICE_NAME_USER
 from .coordinator import LianderDataUpdateCoordinator
 from .gas import has_active_gas_contract
 from .migration import async_migrate_registry, remove_inactive_gas_registry_entries
@@ -29,6 +30,23 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry
 
     # await coordinator.async_refresh()  # Initial fetch to populate data
     return coordinator
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removal of Mijn Liander service-group devices from Home Assistant."""
+    if device_entry.config_entry_id != config_entry.entry_id:
+        return False
+
+    allowed_identifiers = {
+        (DOMAIN, config_entry.entry_id),
+        (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_USER}"),
+        (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_GAS}"),
+    }
+    return bool(device_entry.identifiers & allowed_identifiers)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
