@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SERVICE_NAME_GAS, SERVICE_NAME_USER
 from .coordinator import LianderDataUpdateCoordinator
 from .gas import has_active_gas_contract
 from .migration import async_migrate_registry, remove_inactive_gas_registry_entries
