@@ -2,20 +2,21 @@
 
 Home Assistant integration for Mijn Liander.
 
-## Install via HACS
+## Install via Home Assistant Marketplace
 
-Click the button below to open Mijn Liander in HACS in your Home Assistant instance:
+Starting with Home Assistant 2026.11, Mijn Liander can be installed from the built-in Marketplace. Use the button below to open the integration in your Home Assistant instance:
 
-[![Open your Home Assistant instance and show the Mijn Liander integration in the HACS store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration)
+[![Open your Home Assistant instance and show the Mijn Liander integration in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration)
 
-Then select **Download** in HACS and restart Home Assistant. If the button does not work, add the repository manually:
+If the button does not work:
 
-1. In Home Assistant, open **HACS > Integrations**.
-2. Open the menu in the upper-right corner and select **Custom repositories**.
-3. Add `https://github.com/HiDiHo01/mijn-liander` with the **Integration** category.
-4. Find **Mijn Liander** in HACS and select **Download**.
-5. Restart Home Assistant.
-6. Go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
+1. In Home Assistant, open **Settings > Marketplace**.
+2. Find **Mijn Liander**.
+3. Select the integration and choose **Download**.
+4. Restart Home Assistant.
+5. Go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
+
+For Home Assistant versions before 2026.11, install Mijn Liander through HACS. Use the [HACS repository link](https://my.home-assistant.io/redirect/hacs_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration), or add `https://github.com/HiDiHo01/mijn-liander` manually under **HACS > Integrations > Custom repositories** with the **Integration** category. Download the integration and restart Home Assistant.
 
 Gas entities are created only while the account has an active gas contract. If the contract is added or removed later, the integration refreshes its entities when the account data next updates.
 
