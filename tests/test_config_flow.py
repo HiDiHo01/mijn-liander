@@ -65,7 +65,7 @@ class TestConfigFlowErrors(unittest.TestCase):
         self.assertEqual(res, {"status": "error", "error": "cannot_connect"})
 
     def test_config_error_translations_match(self) -> None:
-        """Every config error key in source strings exists in locales."""
+        """Every config error key in the English locale exists in both locales."""
         locales = {
             lang: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
@@ -73,16 +73,16 @@ class TestConfigFlowErrors(unittest.TestCase):
             for lang in ("en", "nl")
         }
 
-        source_errors = set(locales["en"]["config"]["error"].keys())
-        self.assertIn("cannot_connect", source_errors)
-        self.assertIn("forbidden", source_errors)
-        self.assertIn("not_found", source_errors)
-        self.assertIn("invalid_auth", source_errors)
-        self.assertIn("service_unavailable", source_errors)
+        english_errors = set(locales["en"]["config"]["error"].keys())
+        self.assertIn("cannot_connect", english_errors)
+        self.assertIn("forbidden", english_errors)
+        self.assertIn("not_found", english_errors)
+        self.assertIn("invalid_auth", english_errors)
+        self.assertIn("service_unavailable", english_errors)
 
         for lang, locale in locales.items():
             locale_errors = set(locale["config"]["error"].keys())
-            self.assertEqual(source_errors, locale_errors, f"Error mismatch in {lang}")
+            self.assertEqual(english_errors, locale_errors, f"Error mismatch in {lang}")
 
     def test_schema_username_selector_type_email(self) -> None:
         """CONF_USERNAME schema field uses TextSelector with TextSelectorType.EMAIL."""
