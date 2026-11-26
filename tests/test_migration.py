@@ -879,7 +879,6 @@ async def test_inactive_gas_cleanup_removes_dotted_ids_without_prior_migration(
     assert registry.async_get(legacy.entity_id) is None
 
 
-
 async def test_one_time_cleanup_removes_only_empty_owned_service_groups(
     hass: HomeAssistant,
 ) -> None:
