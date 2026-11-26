@@ -1,7 +1,6 @@
 """Tests for native Home Assistant removal of Mijn Liander group devices."""
 
 import pytest
-
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
