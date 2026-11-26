@@ -349,11 +349,24 @@ def _remove_empty_legacy_service_group_devices(
         device_reg,
         entry_id,
     ):
+        group_identifiers = (
+            allowed_groups.get(device.model) if device.model is not None else None
+        )
+        has_legacy_electricity_identifier = (
+            device.model == SERVICE_NAME_ELEKTRA
+            and any(
+                identifier[:2] == (DOMAIN, entry_id) and len(identifier) > 2
+                for identifier in device.identifiers
+            )
+        )
         if (
             device.config_entry_id != entry_id
             or device.config_entries != {entry_id}
-            or device.model not in allowed_groups
-            or not device.identifiers.intersection(allowed_groups[device.model])
+            or group_identifiers is None
+            or not (
+                device.identifiers.intersection(group_identifiers)
+                or has_legacy_electricity_identifier
+            )
         ):
             continue
 
