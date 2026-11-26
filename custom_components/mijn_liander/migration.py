@@ -361,7 +361,6 @@ def _remove_empty_legacy_service_group_devices(
         )
         if (
             device.config_entry_id != entry_id
-            or device.config_entries != {entry_id}
             or group_identifiers is None
             or not (
                 device.identifiers.intersection(group_identifiers)
