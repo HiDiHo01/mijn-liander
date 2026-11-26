@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import device_registry, entity_registry
 
-from .const import DOMAIN, SERVICE_NAME_ELEKTRA, SERVICE_NAME_GAS
+from .const import (
+    DOMAIN,
+    SERVICE_NAME_ELEKTRA,
+    SERVICE_NAME_GAS,
+    SERVICE_NAME_USER,
+)
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -318,11 +323,76 @@ def remove_inactive_gas_registry_entries(
         )
 
 
+# Persisted in config-entry data so this cleanup is performed only once.
+_LEGACY_SERVICE_GROUP_CLEANUP_KEY = "_legacy_service_group_cleanup_v1"
+
+
+def _remove_empty_legacy_service_group_devices(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> int:
+    """Remove empty, exclusively owned legacy service-group device records."""
+    device_reg = device_registry.async_get(hass)
+    entity_reg = entity_registry.async_get(hass)
+    entry_id = config_entry.entry_id
+    allowed_groups = {
+        SERVICE_NAME_ELEKTRA: {
+            (DOMAIN, entry_id),
+            (DOMAIN, entry_id, None),
+        },
+        SERVICE_NAME_USER: {(DOMAIN, f"{entry_id}_{SERVICE_NAME_USER}")},
+        SERVICE_NAME_GAS: {(DOMAIN, f"{entry_id}_{SERVICE_NAME_GAS}")},
+    }
+    removed_count = 0
+
+    for device in device_registry.async_entries_for_config_entry(
+        device_reg,
+        entry_id,
+    ):
+        if (
+            device.config_entry_id != entry_id
+            or device.config_entries != {entry_id}
+            or device.model not in allowed_groups
+            or not device.identifiers.intersection(allowed_groups[device.model])
+        ):
+            continue
+
+        if any(
+            entity.device_id == device.id for entity in entity_reg.entities.values()
+        ):
+            _LOGGER.debug(
+                "Keeping non-empty legacy Mijn Liander service group %s",
+                device.id,
+            )
+            continue
+
+        device_reg.async_remove_device(device.id)
+        removed_count += 1
+
+    if removed_count:
+        _LOGGER.info(
+            "Removed %s empty legacy Mijn Liander service-group device records",
+            removed_count,
+        )
+
+    return removed_count
+
+
 async def async_migrate_registry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
 ) -> None:
     """Migrate existing entity and device identities before platform setup."""
+    if not config_entry.data.get(_LEGACY_SERVICE_GROUP_CLEANUP_KEY, False):
+        _remove_empty_legacy_service_group_devices(hass, config_entry)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                _LEGACY_SERVICE_GROUP_CLEANUP_KEY: True,
+            },
+        )
+
     _migrate_entity_unique_ids(
         entity_registry.async_get(hass),
         config_entry,
