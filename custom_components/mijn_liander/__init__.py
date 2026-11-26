@@ -47,20 +47,12 @@ async def async_remove_config_entry_device(
     if device_entry.config_entry_id != config_entry.entry_id:
         return False
 
-    group_name = device_entry.model
-    if group_name not in {
-        SERVICE_NAME_ELEKTRA,
-        SERVICE_NAME_USER,
-        SERVICE_NAME_GAS,
-    }:
-        return False
-
-    expected_identifier = (
-        config_entry.entry_id
-        if group_name == SERVICE_NAME_ELEKTRA
-        else f"{config_entry.entry_id}_{group_name}"
-    )
-    return (DOMAIN, expected_identifier) in device_entry.identifiers
+    allowed_identifiers = {
+        (DOMAIN, config_entry.entry_id),
+        (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_USER}"),
+        (DOMAIN, f"{config_entry.entry_id}_{SERVICE_NAME_GAS}"),
+    }
+    return bool(device_entry.identifiers & allowed_identifiers)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
