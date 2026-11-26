@@ -43,6 +43,20 @@ async def test_allow_removal_of_owned_group_device(
     assert device_registry.async_get(device_entry.id) is None
 
 
+async def test_allow_removal_with_missing_model(hass) -> None:
+    """Allow an owned service group when legacy device metadata lacks a model."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
+    config_entry.add_to_hass(hass)
+    device_entry = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{config_entry.entry_id}_Gas")},
+    )
+
+    assert await async_remove_config_entry_device(
+        hass, config_entry, device_entry
+    )
+
+
 async def test_reject_removal_of_unrelated_device(hass) -> None:
     """Reject devices that do not represent a Mijn Liander service group."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="account")
