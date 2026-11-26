@@ -4,17 +4,11 @@ Home Assistant integration for Mijn Liander.
 
 ## Install via Home Assistant Marketplace
 
-Starting with Home Assistant 2026.11, Mijn Liander can be installed from the built-in Marketplace. Use the button below to open the integration in your Home Assistant instance:
+Starting with Home Assistant 2026.11, Mijn Liander can be installed from the built-in Marketplace. Use the button below to open the repository in your Home Assistant instance:
 
-[![Open your Home Assistant instance and show the Mijn Liander integration in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration)
+[![Open your Home Assistant instance and show the Mijn Liander repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration)
 
-If the button does not work:
-
-1. In Home Assistant, open **Settings > Marketplace**.
-2. Find **Mijn Liander**.
-3. Select the integration and choose **Download**.
-4. Restart Home Assistant.
-5. Go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
+If Mijn Liander is not yet in the public catalog, the Marketplace offers to add it as a custom repository. Confirm that step, then download the integration. Restart Home Assistant and go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
 
 For Home Assistant versions before 2026.11, install Mijn Liander through HACS. Use the [HACS repository link](https://my.home-assistant.io/redirect/hacs_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration), or add `https://github.com/HiDiHo01/mijn-liander` manually under **HACS > Integrations > Custom repositories** with the **Integration** category. Download the integration and restart Home Assistant.
 
