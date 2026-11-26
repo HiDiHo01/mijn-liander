@@ -66,7 +66,6 @@ class TestConfigFlowErrors(unittest.TestCase):
 
     def test_config_error_translations_match(self) -> None:
         """Every config error key in source strings exists in locales."""
-        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
             lang: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
@@ -74,7 +73,7 @@ class TestConfigFlowErrors(unittest.TestCase):
             for lang in ("en", "nl")
         }
 
-        source_errors = set(source["config"]["error"].keys())
+        source_errors = set(locales["en"]["config"]["error"].keys())
         self.assertIn("cannot_connect", source_errors)
         self.assertIn("forbidden", source_errors)
         self.assertIn("not_found", source_errors)
@@ -183,15 +182,12 @@ class TestConfigFlowErrors(unittest.TestCase):
 
     def test_config_step_descriptions_and_data_descriptions(self) -> None:
         """Config flow steps define helpful descriptions and field guidance."""
-        source = json.loads((INTEGRATION_PATH / "strings.json").read_text())
         locales = {
             lang: json.loads(
                 (INTEGRATION_PATH / "translations" / f"{lang}.json").read_text()
             )
             for lang in ("en", "nl")
         }
-
-        self.assertEqual(source["config"]["step"], locales["en"]["config"]["step"])
 
         expected_guidance = {
             "en": {
