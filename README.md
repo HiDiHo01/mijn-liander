@@ -10,13 +10,7 @@ Starting with Home Assistant 2026.11, Mijn Liander can be installed from the bui
 
 If Mijn Liander is not yet in the public catalog, the Marketplace offers to add it as a custom repository. Confirm that step, then download the integration. Restart Home Assistant and go to **Settings > Devices & services > Add integration**, find **Mijn Liander**, and sign in with your Mijn Liander account.
 
-For Home Assistant versions before 2026.11, install Mijn Liander through HACS. Use the [HACS repository link](https://my.home-assistant.io/redirect/hacs_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration), or add `https://github.com/HiDiHo01/mijn-liander` manually under **HACS > Integrations > Custom repositories** with the **Integration** category. <!-- coderabbit-ai-generated:v1 -->
-
-<!-- coderabbit-ai-generated-section:v1:5ccdc1e5350bfcea293fc97576f630259dd926dcebeb4c97ef45703dd7eba040 -->
-
-Download the integration, then restart Home Assistant. Go to **Settings > Devices & services > Add integration**, select **Mijn Liander**, and sign in with your Mijn Liander account to receive data.
-
-<!-- /coderabbit-ai-generated:v1 -->
+For Home Assistant versions before 2026.11, install Mijn Liander through HACS. Use the [HACS repository link](https://my.home-assistant.io/redirect/hacs_repository/?owner=HiDiHo01&repository=mijn-liander&category=integration), or add `https://github.com/HiDiHo01/mijn-liander` manually under **HACS > Integrations > Custom repositories** with the **Integration** category. Download the integration, restart Home Assistant, then go to **Settings > Devices & services > Add integration**, select **Mijn Liander**, and sign in with your Mijn Liander account to receive data.
 
 Gas entities are created only while the account has an active gas contract. If the contract is added or removed later, the integration refreshes its entities when the account data next updates.
 
