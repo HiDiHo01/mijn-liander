@@ -79,9 +79,9 @@ class LianderDataUpdateCoordinator(DataUpdateCoordinator):
         self._password = config_entry.data[CONF_PASSWORD]
         self.hass = hass
 
-        if platform.system() == 'Windows':
+        # if platform.system() == 'Windows':
             # Set the event loop policy
-            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+            # asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
         self._session = async_get_clientsession(hass)  # Gebruik HA's session
         self._token: str | None = None
