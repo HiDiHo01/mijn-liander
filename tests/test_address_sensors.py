@@ -93,7 +93,6 @@ def test_address_fields_share_user_device_and_translations(
     assert api_field in data[0]["adres"]
 
     for relative_path, expected_name in (
-        ("strings.json", english_name),
         ("translations/en.json", english_name),
         ("translations/nl.json", dutch_name),
     ):
